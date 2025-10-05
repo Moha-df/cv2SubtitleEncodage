@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Version avec grille configurable pour les points visibles
+Version avec 4 grilles configurables avec disques blancs
 """
 
 import cv2
@@ -14,12 +14,20 @@ import os
 class SubtitleEncoderVisibleLarge:
     def __init__(self, grid_size: Tuple[int, int] = (16, 16)):
         """
-        Encodeur avec grille configurable
+        Encodeur avec 4 grilles dans les coins (grilles 16x16 chacune)
         """
         self.grid_width, self.grid_height = grid_size
         self.grid_size = grid_size
-        self.point_size = 6 
-        self.point_intensity = 50
+        self.point_size = 6  # Disques adaptés pour grilles 16x16
+        self.point_intensity = 255  # Blanc pur
+        self.num_grids = 4  # 4 grilles dans les coins
+        # Positions relatives des 4 grilles (top-left, top-right, bottom-left, bottom-right)
+        self.grid_positions = [
+            (0.05, 0.05),    # Haut gauche
+            (0.55, 0.05),    # Haut droite  
+            (0.05, 0.55),    # Bas gauche
+            (0.55, 0.55)     # Bas droite
+        ]
         
     def parse_srt(self, srt_file: str) -> List[Dict]:
         """Parse un fichier SRT"""
@@ -28,27 +36,30 @@ class SubtitleEncoderVisibleLarge:
         with open(srt_file, 'r', encoding='utf-8') as f:
             content = f.read()
         
-
-        # pour lire le fichier srt
-        pattern = r'(\d+)\n(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})\n(.*?)(?=\n\d+\n|\Z)'
-        matches = re.findall(pattern, content, re.DOTALL)
+        # Parser simple pour SRT
+        blocks = re.split(r'\n\s*\n', content.strip())
         
-        for match in matches:
-            index, start_time, end_time, text = match
-            text = text.strip().replace('\n', ' ')
-            
-            start_seconds = self._time_to_seconds(start_time)
-            end_seconds = self._time_to_seconds(end_time)
-            
-            subtitles.append({
-                'index': int(index),
-                'start_time': start_seconds,
-                'end_time': end_seconds,
-                'text': text
-            })
+        for block in blocks:
+            lines = block.strip().split('\n')
+            if len(lines) >= 3:
+                index = int(lines[0])
+                time_line = lines[1]
+                text = '\n'.join(lines[2:])
+                
+                # Parser le timing
+                start_time, end_time = time_line.split(' --> ')
+                start_seconds = self._time_to_seconds(start_time)
+                end_seconds = self._time_to_seconds(end_time)
+                
+                subtitles.append({
+                    'index': index,
+                    'start_time': start_seconds,
+                    'end_time': end_seconds,
+                    'text': text
+                })
         
         return subtitles
-    
+        
     def _time_to_seconds(self, time_str: str) -> float:
         """Convertit timestamp en secondes"""
         time_str = time_str.replace(',', '.')
@@ -63,50 +74,91 @@ class SubtitleEncoderVisibleLarge:
             binary_str += binary_char
         return binary_str
     
-    def binary_to_grid_positions(self, binary_str: str) -> List[Tuple[int, int]]:
-        """Convertit binaire en positions de grille"""
+    def binary_to_grid_positions(self, binary_str: str) -> List[Tuple[int, int, int]]:
+        """Convertit binaire en positions IDENTIQUES sur les 4 grilles pour redondance"""
         positions = []
-        total_positions = self.grid_width * self.grid_height
+        positions_per_grid = self.grid_width * self.grid_height
         
-        # Limiter la longueur binaire à la taille de la grille
-        limited_binary = binary_str[:total_positions]
+        # Limiter la longueur binaire à UNE SEULE grille (même contenu sur les 4)
+        limited_binary = binary_str[:positions_per_grid]
         
-        for i, bit in enumerate(limited_binary):
-            if bit == '1':
-                x = i % self.grid_width
-                y = i // self.grid_width
-                positions.append((x, y))
+        # Générer les mêmes positions pour chacune des 4 grilles
+        for grid_id in range(self.num_grids):
+            for i, bit in enumerate(limited_binary):
+                if bit == '1':
+                    x = i % self.grid_width
+                    y = i // self.grid_width
+                    positions.append((x, y, grid_id))
         
         return positions
     
-    def add_visible_points(self, frame: np.ndarray, positions: List[Tuple[int, int]], 
+    def add_visible_points(self, frame: np.ndarray, positions: List[Tuple[int, int, int]], 
                           frame_width: int, frame_height: int) -> np.ndarray:
-        """Ajoute des points ROUGES visibles"""
+        """Ajoute des disques BLANCS parfaitement ronds sur 4 grilles"""
         modified_frame = frame.copy()
         
-        cell_width = frame_width // self.grid_width
-        cell_height = frame_height // self.grid_height
+        # Taille de chaque grille (40% de l'écran pour éviter les chevauchements)
+        grid_pixel_width = int(frame_width * 0.4)
+        grid_pixel_height = int(frame_height * 0.4)
         
-        for x, y in positions:
-            center_x = x * cell_width + cell_width // 2
-            center_y = y * cell_height + cell_height // 2
+        cell_width = grid_pixel_width // self.grid_width
+        cell_height = grid_pixel_height // self.grid_height
+        
+        for x, y, grid_id in positions:
+            # Calculer la position de base de la grille
+            grid_x_offset = int(self.grid_positions[grid_id][0] * frame_width)
+            grid_y_offset = int(self.grid_positions[grid_id][1] * frame_height)
             
-            # Cercle rouge
-            cv2.circle(modified_frame, (center_x, center_y), self.point_size, (0, 0, 255), -1)
-            # Contour blanc
-            cv2.circle(modified_frame, (center_x, center_y), self.point_size + 2, (255, 255, 255), 2)
+            # Position du centre du disque
+            center_x = grid_x_offset + x * cell_width + cell_width // 2
+            center_y = grid_y_offset + y * cell_height + cell_height // 2
+            
+            # Disque blanc parfait avec anti-aliasing
+            cv2.circle(modified_frame, (center_x, center_y), self.point_size, (255, 255, 255), -1, cv2.LINE_AA)
+            # Contour noir fin pour améliorer la détection
+            cv2.circle(modified_frame, (center_x, center_y), self.point_size + 1, (0, 0, 0), 1, cv2.LINE_AA)
         
         return modified_frame
     
+    def add_red_borders(self, frame: np.ndarray) -> np.ndarray:
+        """Ajoute des contours rouges aux coins pour aider la détection du décodeur"""
+        bordered_frame = frame.copy()
+        height, width = frame.shape[:2]
+        
+        # Épaisseur des contours
+        thickness = 8
+        corner_size = min(width, height) // 8  # Taille des coins (1/8 de l'écran)
+        
+        # Couleur rouge vif
+        red_color = (0, 0, 255)  # BGR
+        
+        # COIN HAUT-GAUCHE
+        cv2.rectangle(bordered_frame, (0, 0), (corner_size, thickness), red_color, -1)  # Horizontal haut
+        cv2.rectangle(bordered_frame, (0, 0), (thickness, corner_size), red_color, -1)  # Vertical gauche
+        
+        # COIN HAUT-DROITE  
+        cv2.rectangle(bordered_frame, (width - corner_size, 0), (width, thickness), red_color, -1)  # Horizontal haut
+        cv2.rectangle(bordered_frame, (width - thickness, 0), (width, corner_size), red_color, -1)  # Vertical droite
+        
+        # COIN BAS-GAUCHE
+        cv2.rectangle(bordered_frame, (0, height - thickness), (corner_size, height), red_color, -1)  # Horizontal bas
+        cv2.rectangle(bordered_frame, (0, height - corner_size), (thickness, height), red_color, -1)  # Vertical gauche
+        
+        # COIN BAS-DROITE
+        cv2.rectangle(bordered_frame, (width - corner_size, height - thickness), (width, height), red_color, -1)  # Horizontal bas
+        cv2.rectangle(bordered_frame, (width - thickness, height - corner_size), (width, height), red_color, -1)  # Vertical droite
+        
+        return bordered_frame
+    
     def encode_video(self, video_path: str, srt_path: str, output_path: str):
         """Encode la vidéo"""
-        print(f"Parsing des sous-titres avec grille {self.grid_width}×{self.grid_height}...")
+        print(f"Parsing des sous-titres avec {self.num_grids} grilles de {self.grid_width}×{self.grid_height}...")
         subtitles = self.parse_srt(srt_path)
         print(f"Trouvé {len(subtitles)} sous-titres")
         
-        # Analyser la capacité de la grille
+        # Analyser la capacité (même contenu sur les 4 grilles)
         max_chars = (self.grid_width * self.grid_height) // 8
-        print(f"Capacité de la grille: {max_chars} caractères max")
+        print(f"Capacité par grille (×{self.num_grids} pour redondance): {max_chars} caractères max")
         
         for subtitle in subtitles:
             if len(subtitle['text']) > max_chars:
@@ -128,8 +180,11 @@ class SubtitleEncoderVisibleLarge:
         
         mapping_data = {
             'grid_size': self.grid_size,
+            'num_grids': self.num_grids,
+            'grid_positions': self.grid_positions,
             'point_size': self.point_size,
             'point_intensity': self.point_intensity,
+            'encoding_type': 'white_circles_4_grids',
             'video_properties': {
                 'fps': fps,
                 'width': width,
@@ -159,7 +214,7 @@ class SubtitleEncoderVisibleLarge:
                     subtitle_positions.extend(positions)
                     current_subtitle_text = subtitle['text']
                     
-                    if subtitle not in [s for s in mapping_data['subtitles'] if s['index'] == subtitle['index']]:
+                    if subtitle['index'] not in [s['index'] for s in mapping_data['subtitles']]:
                         mapping_data['subtitles'].append({
                             'index': subtitle['index'],
                             'start_time': subtitle['start_time'],
@@ -170,10 +225,15 @@ class SubtitleEncoderVisibleLarge:
                         })
                     break
             
+            # TOUJOURS ajouter les contours rouges pour la détection de perspective
+            frame = self.add_red_borders(frame)
+            
             if subtitle_positions:
                 frame = self.add_visible_points(frame, subtitle_positions, width, height)
                 if frame_count % (fps * 2) == 0:
-                    print(f"Frame {frame_count}/{total_frames} - Sous-titre: '{current_subtitle_text}' - {len(subtitle_positions)} points")
+                    print(f"Frame {frame_count}/{total_frames} - Sous-titre: '{current_subtitle_text}' - {len(subtitle_positions)} points + contours rouges")
+            elif frame_count % (fps * 2) == 0:
+                print(f"Frame {frame_count}/{total_frames} - Pas de sous-titres + contours rouges")
             
             out.write(frame)
             frame_count += 1
@@ -190,12 +250,12 @@ class SubtitleEncoderVisibleLarge:
         print(f"Mapping: {mapping_path}")
 
 def main():
-    parser = argparse.ArgumentParser(description='Encoder avec grille configurable')
+    parser = argparse.ArgumentParser(description='Encoder avec 4 grilles configurables')
     parser.add_argument('--video', required=True, help='Vidéo source')
     parser.add_argument('--srt', required=True, help='Fichier SRT')
     parser.add_argument('--output', required=True, help='Vidéo de sortie')
-    parser.add_argument('--grid-width', type=int, default=16, help='Largeur de la grille')
-    parser.add_argument('--grid-height', type=int, default=16, help='Hauteur de la grille')
+    parser.add_argument('--grid-width', type=int, default=16, help='Largeur de chaque grille (4 grilles au total)')
+    parser.add_argument('--grid-height', type=int, default=16, help='Hauteur de chaque grille (4 grilles au total)')
     
     args = parser.parse_args()
     

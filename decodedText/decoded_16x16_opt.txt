@@ -1,5 +1,0 @@
-0.00s: *`tl pp`hd h hc+*
-0.04s: *`2tl pp`hd h hc+*
-0.08s: *Na2tn rr`hf h hc*
-0.12s: *Na2un rr`hf h hc*    @
-0.17s: *Na2un rr`hf h hc*    @
