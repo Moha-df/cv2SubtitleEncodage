@@ -21,7 +21,7 @@ def clean_text(text: str) -> str:
     if not text:
         return ""
     # Supprimer caractères spéciaux mais garder ponctuation utile
-    cleaned = re.sub(r'[^\w\s:.,!?*\'"-]', '', text.lower())
+    cleaned = re.sub(r'[^\w\s:.,!?*\'"-]', '', text)
     return re.sub(r'\s+', ' ', cleaned).strip()
 
 def calculate_text_similarity(text1: str, text2: str) -> float:
@@ -59,10 +59,12 @@ def calculate_stats(original_mapping: Dict, decoded_json: Dict) -> Dict:
         'total_decoded': len(decoded_subtitles),
         'original_best_scores': {},  # index -> meilleur score obtenu
         'original_matches': {},      # index -> liste des décodages qui matchent
+        'original_mean_scores': {},  # index -> moyenne des similarités
         'noise_decodings': [],       # décodages qui ne matchent rien
         'all_matches': [],           # tous les matches avec détails
         'noise_percentage': 0.0,
         'average_best_score': 0.0,
+        'average_global_score': 0.0, # moyenne de toutes les similarités
         'coverage_percentage': 0.0,  # % d'originaux qui ont au moins un match
     }
     
@@ -71,38 +73,58 @@ def calculate_stats(original_mapping: Dict, decoded_json: Dict) -> Dict:
         idx = original.get('index', 0)
         stats['original_best_scores'][idx] = 0.0
         stats['original_matches'][idx] = []
+        stats['original_mean_scores'][idx] = 0.0
     
+    # Pour calculer la moyenne globale
+    all_similarities = []
+    # Pour chaque original, stocker toutes les similarités
+    original_similarities = {original.get('index', 0): [] for original in original_subtitles}
+
     # Analyser chaque décodage
     for decoded in decoded_subtitles:
-        best_original, score = find_best_match(decoded['text'], original_subtitles)
-        
-        if best_original and score > 0.3:  # Seuil minimum pour considérer comme match
+        # Calculer la similarité avec chaque original
+        similarities = [calculate_text_similarity(decoded['text'], orig['text']) for orig in original_subtitles]
+        all_similarities.extend(similarities)
+        # Trouver le meilleur match
+        best_score = max(similarities)
+        best_idx = similarities.index(best_score)
+        best_original = original_subtitles[best_idx] if best_score > 0 else None
+
+        # Stocker la similarité pour la moyenne par original
+        for idx, score in enumerate(similarities):
+            original_idx = original_subtitles[idx].get('index', 0)
+            original_similarities[original_idx].append(score)
+
+        if best_original and best_score > 0.3:  # Seuil minimum pour considérer comme match
             original_idx = best_original.get('index', 0)
-            
-            # Enregistrer le match
             match_info = {
                 'decoded_text': decoded['text'],
                 'original_text': best_original['text'],
-                'similarity': score,
+                'similarity': best_score,
                 'decoded_confidence': decoded.get('confidence', 0),
                 'original_index': original_idx,
                 'group_size': decoded.get('group_size', 1)
             }
             stats['all_matches'].append(match_info)
-            
-            # Mettre à jour le meilleur score pour cet original
-            if score > stats['original_best_scores'][original_idx]:
-                stats['original_best_scores'][original_idx] = score
-            
-            # Ajouter à la liste des matches pour cet original
+            if best_score > stats['original_best_scores'][original_idx]:
+                stats['original_best_scores'][original_idx] = best_score
             stats['original_matches'][original_idx].append(match_info)
         else:
-            # C'est du bruit
             stats['noise_decodings'].append({
                 'text': decoded['text'],
                 'confidence': decoded.get('confidence', 0),
                 'group_size': decoded.get('group_size', 1)
             })
+
+    # Calculer la moyenne de similarité pour chaque original (seulement sur les matches)
+    for idx in stats['original_mean_scores'].keys():
+        matches = stats['original_matches'][idx]
+        sims = [m['similarity'] for m in matches]
+        stats['original_mean_scores'][idx] = sum(sims) / len(sims) if sims else 0.0
+
+    # Score moyen global : moyenne des moyennes de chaque sous-titre original
+    mean_scores = [score for score in stats['original_mean_scores'].values() if score > 0]
+    stats['average_global_score'] = sum(mean_scores) / len(mean_scores) if mean_scores else 0.0
     
     # Calculer les statistiques finales
     if stats['original_best_scores']:
@@ -144,13 +166,15 @@ def print_stats(stats: Dict, original_mapping: Dict = None):
     print("\n🔍 Détails par sous-titre original:")
     for idx in sorted(stats['original_best_scores'].keys()):
         score = stats['original_best_scores'][idx]
+        mean_score = stats['original_mean_scores'][idx]
         matches = stats['original_matches'][idx]
         status = "✅ Décodé" if score > 0 else "❌ Non trouvé"
-        print(f"  #{idx}: {status} - Meilleur: {score*100:.1f}% - Matches: {len(matches)}")
+        print(f"  #{idx}: {status} - Meilleur: {score*100:.1f}% - Moyenne: {mean_score*100:.1f}% - Matches: {len(matches)}")
     
     print("\n💡 Résumé:")
     print(f"  • {stats['coverage_percentage']*100:.1f}% des sous-titres originaux ont été décodés")
-    print(f"  • Score moyen des décodages réussis: {stats['average_best_score']*100:.1f}%")
+    print(f"  • Score moyen des meilleurs décodages: {stats['average_best_score']*100:.1f}%")
+    print(f"  • Score moyen global (tous décodages): {stats['average_global_score']*100:.1f}%")
     print(f"  • {stats['noise_percentage']*100:.1f}% des décodages sont du bruit")
 
 def main():

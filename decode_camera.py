@@ -12,6 +12,7 @@ import numpy as np
 import json
 import argparse
 import time
+import os
 from typing import List, Tuple
 from collections import deque
 
@@ -22,12 +23,15 @@ class SimpleSubtitleDecoder:
         self.point_size = point_size
         self.num_grids = 4
         
+        # Offsets pour chaque grille (identiques à l'encodeur)
+        self.grid_offsets = [0, 5, 10, 15]  # Grille 0: pas d'offset, 1: +5, 2: +10, 3: +15
+        
         # Positions des 4 grilles (identiques à l'encodeur)
         self.grid_positions = [
-            (0.05, 0.05),    # Haut gauche
-            (0.55, 0.05),    # Haut droite  
-            (0.05, 0.55),    # Bas gauche
-            (0.55, 0.55)     # Bas droite
+            (0.002, 0.02),    # Haut gauche
+            (0.52, 0.02),    # Haut droite  
+            (0.002, 0.52),    # Bas gauche
+            (0.52, 0.52)     # Bas droite
         ]
         
         # Buffer pour lisser les détections
@@ -50,6 +54,33 @@ class SimpleSubtitleDecoder:
         print(f"🎯 Décodeur SIMPLE initialisé")
         print(f"📱 Grille: {self.grid_width}×{self.grid_height}")
         print(f"🔴 Taille points: {self.point_size}")
+        print(f"⚙️ Offsets: {self.grid_offsets}")
+    
+    def load_mapping_config(self, mapping_file: str, override_point_size: bool = True):
+        """Charge la configuration depuis un fichier de mapping JSON"""
+        try:
+            import json
+            with open(mapping_file, 'r', encoding='utf-8') as f:
+                mapping_data = json.load(f)
+            
+            # Charger les offsets si disponibles
+            if 'grid_offsets' in mapping_data:
+                self.grid_offsets = mapping_data['grid_offsets']
+                print(f"✅ Offsets chargés depuis {mapping_file}: {self.grid_offsets}")
+            
+            # Charger les autres paramètres si disponibles
+            if 'grid_positions' in mapping_data:
+                self.grid_positions = mapping_data['grid_positions']
+                print(f"✅ Positions grilles chargées: {len(self.grid_positions)} grilles")
+            
+            # Ne charger point_size que si autorisé
+            if 'point_size' in mapping_data and override_point_size:
+                self.point_size = mapping_data['point_size']
+                print(f"✅ Taille points chargée: {self.point_size}px")
+                
+        except Exception as e:
+            print(f"⚠️ Impossible de charger {mapping_file}: {e}")
+            print(f"⚠️ Utilisation des paramètres par défaut")
     
     def export_subtitles_to_json(self, filename="decoded_subtitles_camera.json"):
         """Exporte tous les sous-titres décodés vers un fichier JSON"""
@@ -98,9 +129,9 @@ class SimpleSubtitleDecoder:
         all_grid_detections = []
         
         for grid_id, (rel_x, rel_y) in enumerate(self.grid_positions):
-            # Zone de la grille (40% de l'écran)
-            grid_pixel_width = int(frame_width * 0.4)
-            grid_pixel_height = int(frame_height * 0.4)
+            # Zone de la grille (48% de l'écran)
+            grid_pixel_width = int(frame_width * 0.48)
+            grid_pixel_height = int(frame_height * 0.48)
             
             grid_x_offset = int(rel_x * frame_width)
             grid_y_offset = int(rel_y * frame_height)
@@ -120,21 +151,69 @@ class SimpleSubtitleDecoder:
             # Appliquer le masque
             masked_gray = cv2.bitwise_and(grid_gray, grid_mask)
             
-            # Paramètres HoughCircles
-            min_radius = max(2, self.point_size - 2)
-            max_radius = self.point_size + 4
+            # Paramètres HoughCircles adaptatifs avec cas spéciaux
+            if self.point_size == 1:
+                # Paramètres ultra-extrêmes pour les cercles pixels (1px)
+                min_radius = 1
+                max_radius = 3
+                min_dist = 1
+                param1 = 10  # Sensibilité absolue
+                param2 = 2   # Seuil critique minimal
+                print(f"🔥🔥🔥 Paramètres ULTRA-EXTRÊMES pour point_size=1 (limite absolue!)")
+            elif self.point_size == 2:
+                # Paramètres ultra-spéciaux pour les cercles minuscules (2px)
+                min_radius = 1
+                max_radius = 4
+                min_dist = 1
+                param1 = 15  # Extrêmement sensible
+                param2 = 3   # Seuil très très bas
+                print(f"🔥🔥 Paramètres ULTRA-spéciaux pour point_size=2")
+            elif self.point_size == 3:
+                # Paramètres spéciaux pour les très petits cercles (3px)
+                min_radius = 1
+                max_radius = 6
+                min_dist = 2
+                param1 = 20  # Très sensible
+                param2 = 5   # Très sensible
+                print(f"🔥 Paramètres spéciaux pour point_size=3")
+            elif self.point_size == 7:
+                # Paramètres spéciaux pour les cercles moyens-gros (7px)
+                min_radius = 6
+                max_radius = 8
+                min_dist = 6
+                param1 = 45  # Moins sensible pour éviter le bruit
+                param2 = 13  # Seuil plus élevé
+                print(f"⭐ Paramètres spéciaux pour point_size=7")
+            else:
+                # Paramètres normaux pour autres tailles
+                min_radius = max(1, self.point_size - 3)
+                max_radius = self.point_size + 5
+                min_dist = max(4, self.point_size - 1)
+                param1 = 30
+                param2 = 8
+            
+            # DEBUG: Afficher les paramètres utilisés
+            if self.debug_mode:
+                print(f"🔍 Grid {grid_id}: point_size={self.point_size}, min_r={min_radius}, max_r={max_radius}, dist={min_dist}, p1={param1}, p2={param2}")
             
             # DÉTECTION DE CERCLES
             circles = cv2.HoughCircles(
                 masked_gray,
                 cv2.HOUGH_GRADIENT,
                 dp=1,
-                minDist=max(6, self.point_size),
-                param1=50,
-                param2=15,
+                minDist=min_dist,
+                param1=param1,
+                param2=param2,
                 minRadius=min_radius,
                 maxRadius=max_radius
             )
+            
+            # DEBUG: Afficher le résultat de la détection
+            if self.debug_mode:
+                circles_count = len(circles[0]) if circles is not None else 0
+                print(f"🎯 Grid {grid_id}: {circles_count} cercles détectés")
+                if circles_count == 0:
+                    print(f"❌ Grid {grid_id}: Aucun cercle détecté avec ces paramètres")
             
             grid_detections = []
             
@@ -164,23 +243,32 @@ class SimpleSubtitleDecoder:
             
             all_grid_detections.append(grid_detections)
             
-            # Debug grille
+            # Debug grille avec paramètres adaptatifs
             if self.debug_mode:
                 grid_color = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0)][grid_id]
                 cv2.rectangle(working_frame, 
                             (grid_x_offset, grid_y_offset),
                             (grid_x_offset + grid_pixel_width, grid_y_offset + grid_pixel_height),
                             grid_color, 2)
-                cv2.putText(working_frame, f"Grid {grid_id}", 
+                cv2.putText(working_frame, f"Grid {grid_id} (r:{min_radius}-{max_radius}, d:{min_dist}, p:{param1},{param2})", 
                            (grid_x_offset + 5, grid_y_offset + 20),
-                           cv2.FONT_HERSHEY_SIMPLEX, 0.6, grid_color, 2)
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.3, grid_color, 1)
         
         # VOTE MAJORITAIRE (2/4 grilles minimum)
         voted_positions = self.vote_majority(all_grid_detections)
         
         if self.debug_mode:
             total_detections = sum(len(detections) for detections in all_grid_detections)
-            print(f"Vote: {total_detections} détections → {len(voted_positions)} validées")
+            print(f"📊 TOTAL: {total_detections} détections brutes → {len(voted_positions)} positions validées par vote")
+            
+            # Debug détaillé par grille
+            for i, detections in enumerate(all_grid_detections):
+                print(f"   Grid {i}: {len(detections)} détections")
+            
+            if total_detections > 0 and len(voted_positions) == 0:
+                print("⚠️ DES CERCLES DÉTECTÉS MAIS AUCUN VOTE MAJORITAIRE!")
+            elif total_detections == 0:
+                print("❌ AUCUN CERCLE DÉTECTÉ DANS AUCUNE GRILLE")
         
         # Stocker la frame de travail pour l'affichage
         self.debug_frame = working_frame if self.debug_mode else None
@@ -188,12 +276,25 @@ class SimpleSubtitleDecoder:
         return voted_positions
     
     def vote_majority(self, all_grid_detections: List[List[Tuple[int, int]]]) -> List[Tuple[int, int]]:
-        """Vote majoritaire simple - au moins 2 grilles d'accord"""
+        """Vote majoritaire avec correction des offsets - au moins 2 grilles d'accord"""
         position_votes = {}
+        positions_per_grid = self.grid_width * self.grid_height
         
-        for grid_detections in all_grid_detections:
+        for grid_id, grid_detections in enumerate(all_grid_detections):
+            offset = self.grid_offsets[grid_id]
+            
             for pos in grid_detections:
-                position_votes[pos] = position_votes.get(pos, 0) + 1
+                x, y = pos
+                # Convertir en index linéaire
+                detected_index = y * self.grid_width + x
+                # Appliquer la dé-offset (inverse de l'encodeur)
+                original_index = (detected_index - offset) % positions_per_grid
+                # Reconvertir en coordonnées
+                original_x = original_index % self.grid_width
+                original_y = original_index // self.grid_width
+                original_pos = (original_x, original_y)
+                
+                position_votes[original_pos] = position_votes.get(original_pos, 0) + 1
         
         # Garder les positions avec au moins 2 votes
         voted_positions = []
@@ -676,11 +777,12 @@ def main():
     parser.add_argument('source', nargs='?', default='0', 
                        help='Source: 0=caméra 0, 1=caméra 1, etc. ou fichier vidéo')
     parser.add_argument('--debug', action='store_true', help='Mode debug')
+    parser.add_argument('--point-size', type=int, default=6, help='Taille des cercles en pixels')
     
     args = parser.parse_args()
     
     try:
-        decoder = SimpleSubtitleDecoder()
+        decoder = SimpleSubtitleDecoder(point_size=args.point_size)
         decoder.debug_mode = args.debug
         
         # Déterminer si c'est une caméra ou vidéo
@@ -702,6 +804,30 @@ def main():
         else:
             # C'est un fichier vidéo
             print(f"🎥 Mode vidéo: {source}")
+            
+            # Essayer de charger le fichier de mapping correspondant
+            video_name = source.replace('.mp4', '')
+            possible_mapping_files = [
+                f"{video_name}_mapping.json",
+                f"{video_name}_16x16_4grids_white_with_borders_mapping.json",
+                "video_16x16_4grids_white_with_borders_mapping.json"
+            ]
+            
+            mapping_loaded = False
+            # Sauvegarder le point_size passé en argument pour qu'il ait la priorité
+            original_point_size = decoder.point_size
+            
+            for mapping_file in possible_mapping_files:
+                if os.path.exists(mapping_file):
+                    print(f"📂 Chargement des paramètres depuis: {mapping_file}")
+                    decoder.load_mapping_config(mapping_file, override_point_size=False)
+                    print(f"🔧 Point size conservé: {original_point_size}px (argument)")
+                    mapping_loaded = True
+                    break
+            
+            if not mapping_loaded:
+                print("⚠️ Aucun fichier de mapping trouvé, utilisation des paramètres par défaut")
+            
             print("🎮 Contrôles: 'q' quitter, 'd' debug, 'c' clear")
             print("📺 Mode vidéo = PAS de redressement (inutile)")
             decoder.process_video(source)

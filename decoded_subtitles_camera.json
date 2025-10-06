@@ -1,94 +1,76 @@
 {
   "subtitles": [
     {
-      "text": "*Naruto screamin in sho`*",
-      "timestamp": 1759079426.6490538,
+      "text": "*Naruto screaming in shock*",
+      "timestamp": 1759688144.249717,
       "confidence": 1.0,
       "index": 0
     },
     {
-      "text": "*JarutO screaming in shock*",
-      "timestamp": 1759079426.6490645,
+      "text": "Kakashi: Calm down Naruto...",
+      "timestamp": 1759688144.2497256,
       "confidence": 1.0,
       "index": 1
     },
     {
-      "text": "*Jaruto screaming in shock*",
-      "timestamp": 1759079426.6490662,
+      "text": "Naruto: Be quiet, as far as I'm",
+      "timestamp": 1759688144.2497275,
       "confidence": 1.0,
       "index": 2
     },
     {
-      "text": "*Naruto screaming in shock*",
-      "timestamp": 1759079426.649067,
+      "text": "You were the most important thin",
+      "timestamp": 1759688144.249728,
       "confidence": 1.0,
       "index": 3
     },
     {
-      "text": "Kakashi: Calm down Naruto...",
-      "timestamp": 1759079426.6490679,
+      "text": "Naruto: He threw his life away..",
+      "timestamp": 1759688144.2497287,
       "confidence": 1.0,
       "index": 4
     },
     {
-      "text": "Naruto: Be quiet, as far as I'm",
-      "timestamp": 1759079426.649069,
+      "text": "Naruto: A broken tool.",
+      "timestamp": 1759688144.2497303,
       "confidence": 1.0,
       "index": 5
     },
     {
-      "text": "You were the most important thin",
-      "timestamp": 1759079426.6490695,
+      "text": "Man that's so wrong.",
+      "timestamp": 1759688144.2497308,
       "confidence": 1.0,
       "index": 6
     },
     {
-      "text": "Naruto: He threw his life away..",
-      "timestamp": 1759079426.6490703,
+      "text": "Zabuza: You talk too much.",
+      "timestamp": 1759688144.2497315,
       "confidence": 1.0,
       "index": 7
     },
     {
-      "text": "Naruto: Hg threw his life away..",
-      "timestamp": 1759079426.6490707,
+      "text": "Your words cut deep, deeper than",
+      "timestamp": 1759688144.249732,
       "confidence": 1.0,
       "index": 8
     },
     {
-      "text": "Naruto: Hg threw his life awqy..",
-      "timestamp": 1759079426.649072,
+      "text": "Zabuza: Boy, give me your kunai.",
+      "timestamp": 1759688144.2497337,
       "confidence": 1.0,
       "index": 9
     },
     {
-      "text": "Naruto: He threw his life away..",
-      "timestamp": 1759079426.6490726,
+      "text": "*Gato getting destroyed by Zabuz",
+      "timestamp": 1759688144.2497344,
       "confidence": 1.0,
       "index": 10
     },
     {
-      "text": "Naruto: A broken tool.",
-      "timestamp": 1759079426.6490731,
+      "text": "*Gato taking a dip in the pool*",
+      "timestamp": 1759688144.249735,
       "confidence": 1.0,
       "index": 11
-    },
-    {
-      "text": "Man that's so wrong.",
-      "timestamp": 1759079426.6490738,
-      "confidence": 1.0,
-      "index": 12
-    },
-    {
-      "text": "Zabuza: You talk too much.",
-      "timestamp": 1759079426.6490743,
-      "confidence": 1.0,
-      "index": 13
-    },
-    {
-      "text": "Your words cut deep, deeper than",
-      "timestamp": 1759079426.649075,
-      "confidence": 1.0,
-      "index": 14
     }
   ]
 }

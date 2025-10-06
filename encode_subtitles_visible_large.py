@@ -21,12 +21,15 @@ class SubtitleEncoderVisibleLarge:
         self.point_size = 6  # Disques adaptés pour grilles 16x16
         self.point_intensity = 255  # Blanc pur
         self.num_grids = 4  # 4 grilles dans les coins
+        
+        # Offsets pour rendre chaque grille différente visuellement
+        self.grid_offsets = [0, 5, 10, 15]  # Grille 0: pas d'offset, 1: +5, 2: +10, 3: +15
         # Positions relatives des 4 grilles (top-left, top-right, bottom-left, bottom-right)
         self.grid_positions = [
-            (0.05, 0.05),    # Haut gauche
-            (0.55, 0.05),    # Haut droite  
-            (0.05, 0.55),    # Bas gauche
-            (0.55, 0.55)     # Bas droite
+            (0.002, 0.02),    # Haut gauche
+            (0.52, 0.02),    # Haut droite  
+            (0.002, 0.52),    # Bas gauche
+            (0.52, 0.52)     # Bas droite
         ]
         
     def parse_srt(self, srt_file: str) -> List[Dict]:
@@ -75,19 +78,23 @@ class SubtitleEncoderVisibleLarge:
         return binary_str
     
     def binary_to_grid_positions(self, binary_str: str) -> List[Tuple[int, int, int]]:
-        """Convertit binaire en positions IDENTIQUES sur les 4 grilles pour redondance"""
+        """Convertit binaire en positions avec OFFSETS différents pour chaque grille"""
         positions = []
         positions_per_grid = self.grid_width * self.grid_height
         
-        # Limiter la longueur binaire à UNE SEULE grille (même contenu sur les 4)
+        # Limiter la longueur binaire à UNE SEULE grille (même contenu logique sur les 4)
         limited_binary = binary_str[:positions_per_grid]
         
-        # Générer les mêmes positions pour chacune des 4 grilles
+        # Générer les positions pour chacune des 4 grilles avec offset
         for grid_id in range(self.num_grids):
+            offset = self.grid_offsets[grid_id]
+            
             for i, bit in enumerate(limited_binary):
                 if bit == '1':
-                    x = i % self.grid_width
-                    y = i // self.grid_width
+                    # Appliquer l'offset avec bouclage circulaire
+                    shifted_index = (i + offset) % positions_per_grid
+                    x = shifted_index % self.grid_width
+                    y = shifted_index // self.grid_width
                     positions.append((x, y, grid_id))
         
         return positions
@@ -98,8 +105,8 @@ class SubtitleEncoderVisibleLarge:
         modified_frame = frame.copy()
         
         # Taille de chaque grille (40% de l'écran pour éviter les chevauchements)
-        grid_pixel_width = int(frame_width * 0.4)
-        grid_pixel_height = int(frame_height * 0.4)
+        grid_pixel_width = int(frame_width * 0.48)
+        grid_pixel_height = int(frame_height * 0.48)
         
         cell_width = grid_pixel_width // self.grid_width
         cell_height = grid_pixel_height // self.grid_height
@@ -182,9 +189,10 @@ class SubtitleEncoderVisibleLarge:
             'grid_size': self.grid_size,
             'num_grids': self.num_grids,
             'grid_positions': self.grid_positions,
+            'grid_offsets': self.grid_offsets,  # Ajouter les offsets
             'point_size': self.point_size,
             'point_intensity': self.point_intensity,
-            'encoding_type': 'white_circles_4_grids',
+            'encoding_type': 'white_circles_4_grids_with_offsets',
             'video_properties': {
                 'fps': fps,
                 'width': width,
@@ -256,6 +264,7 @@ def main():
     parser.add_argument('--output', required=True, help='Vidéo de sortie')
     parser.add_argument('--grid-width', type=int, default=16, help='Largeur de chaque grille (4 grilles au total)')
     parser.add_argument('--grid-height', type=int, default=16, help='Hauteur de chaque grille (4 grilles au total)')
+    parser.add_argument('--point-size', type=int, default=6, help='Taille des cercles en pixels')
     
     args = parser.parse_args()
     
@@ -268,6 +277,11 @@ def main():
         return
     
     encoder = SubtitleEncoderVisibleLarge(grid_size=(args.grid_width, args.grid_height))
+    
+    # Configurer la taille des points si spécifiée
+    if hasattr(args, 'point_size') and args.point_size:
+        encoder.point_size = args.point_size
+        print(f"Taille des cercles: {args.point_size}px")
     
     try:
         encoder.encode_video(args.video, args.srt, args.output)
