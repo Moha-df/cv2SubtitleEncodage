@@ -182,9 +182,8 @@ class SimpleSubtitleDecoder:
                 min_radius = 5
                 max_radius = 8
                 min_dist = 5
-                param1 = 100  # Sensibilité modérée
-                param2 = 10  # Seuil modéré
-                #print(f"🌟 Paramètres spéciaux pour point_size=6")
+                param1 = 40  # Sensibilité modérée
+                param2 = 12  # Seuil modéré
             else:
                 # Paramètres normaux pour autres tailles
                 min_radius = max(1, self.point_size - 3)
