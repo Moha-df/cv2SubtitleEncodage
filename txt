@@ -1,0 +1,401 @@
+{
+  "total_original": 12,
+  "total_decoded": 21,
+  "original_best_scores": {
+    "1": 1.0,
+    "2": 1.0,
+    "3": 1.0,
+    "4": 1.0,
+    "5": 1.0,
+    "6": 1.0,
+    "7": 1.0,
+    "8": 1.0,
+    "9": 1.0,
+    "10": 1.0,
+    "11": 1.0,
+    "12": 1.0
+  },
+  "original_matches": {
+    "1": [
+      {
+        "decoded_text": "*Naruto screaming in shock*",
+        "original_text": "*Naruto screaming in shock*",
+        "similarity": 1.0,
+        "decoded_confidence": 1.0,
+        "original_index": 1,
+        "group_size": 1
+      }
+    ],
+    "2": [
+      {
+        "decoded_text": "Kakashi: Calm down Naruto...",
+        "original_text": "Kakashi: Calm down Naruto...",
+        "similarity": 1.0,
+        "decoded_confidence": 1.0,
+        "original_index": 2,
+        "group_size": 1
+      }
+    ],
+    "3": [
+      {
+        "decoded_text": "Naruto: Be quiet, as far as I'm",
+        "original_text": "Naruto: Be quiet, as far as I'm concerned\nhe's enemy number one.",
+        "similarity": 1.0,
+        "decoded_confidence": 1.0,
+        "original_index": 3,
+        "group_size": 1
+      }
+    ],
+    "4": [
+      {
+        "decoded_text": "You were the most important thin",
+        "original_text": "You were the most important thing in the world\nto him, and he meant nothing to you?",
+        "similarity": 1.0,
+        "decoded_confidence": 1.0,
+        "original_index": 4,
+        "group_size": 1
+      }
+    ],
+    "5": [
+      {
+        "decoded_text": "Naruto: He threw his life away..",
+        "original_text": "Naruto: He threw his life away... and for\nwhat?",
+        "similarity": 1.0,
+        "decoded_confidence": 1.0,
+        "original_index": 5,
+        "group_size": 1
+      },
+      {
+        "decoded_text": "Naruto: He thsew his life away..",
+        "original_text": "Naruto: He threw his life away... and for\nwhat?",
+        "similarity": 0.96875,
+        "decoded_confidence": 1.0,
+        "original_index": 5,
+        "group_size": 1
+      },
+      {
+        "decoded_text": "Naruto: He threw his life away..",
+        "original_text": "Naruto: He threw his life away... and for\nwhat?",
+        "similarity": 1.0,
+        "decoded_confidence": 1.0,
+        "original_index": 5,
+        "group_size": 1
+      },
+      {
+        "decoded_text": "Naruto: X threw xis life away..",
+        "original_text": "Naruto: He threw his life away... and for\nwhat?",
+        "similarity": 0.9206349206349206,
+        "decoded_confidence": 1.0,
+        "original_index": 5,
+        "group_size": 1
+      },
+      {
+        "decoded_text": "Naruto: X threw his life away..",
+        "original_text": "Naruto: He threw his life away... and for\nwhat?",
+        "similarity": 0.9523809523809523,
+        "decoded_confidence": 1.0,
+        "original_index": 5,
+        "group_size": 1
+      },
+      {
+        "decoded_text": "Naruto: X threw xis lifm away..",
+        "original_text": "Naruto: He threw his life away... and for\nwhat?",
+        "similarity": 0.8888888888888888,
+        "decoded_confidence": 1.0,
+        "original_index": 5,
+        "group_size": 1
+      },
+      {
+        "decoded_text": "Naruoz X threw his life away..",
+        "original_text": "Naruto: He threw his life away... and for\nwhat?",
+        "similarity": 0.9032258064516129,
+        "decoded_confidence": 1.0,
+        "original_index": 5,
+        "group_size": 1
+      },
+      {
+        "decoded_text": "Naruo: Xe threw hiw lifm away..",
+        "original_text": "Naruto: He threw his life away... and for\nwhat?",
+        "similarity": 0.8888888888888888,
+        "decoded_confidence": 1.0,
+        "original_index": 5,
+        "group_size": 1
+      },
+      {
+        "decoded_text": "Naruto: Xe threw hiw lifm away..",
+        "original_text": "Naruto: He threw his life away... and for\nwhat?",
+        "similarity": 0.90625,
+        "decoded_confidence": 1.0,
+        "original_index": 5,
+        "group_size": 1
+      },
+      {
+        "decoded_text": "Naruto: He threw his life away..",
+        "original_text": "Naruto: He threw his life away... and for\nwhat?",
+        "similarity": 1.0,
+        "decoded_confidence": 1.0,
+        "original_index": 5,
+        "group_size": 1
+      }
+    ],
+    "6": [
+      {
+        "decoded_text": "Naruto: A broken tool.",
+        "original_text": "Naruto: A broken tool.",
+        "similarity": 1.0,
+        "decoded_confidence": 1.0,
+        "original_index": 6,
+        "group_size": 1
+      }
+    ],
+    "7": [
+      {
+        "decoded_text": "Man that's so wrong.",
+        "original_text": "Man that's so wrong.",
+        "similarity": 1.0,
+        "decoded_confidence": 1.0,
+        "original_index": 7,
+        "group_size": 1
+      }
+    ],
+    "8": [
+      {
+        "decoded_text": "Zabuza: You talk too much.",
+        "original_text": "Zabuza: You talk too much.",
+        "similarity": 1.0,
+        "decoded_confidence": 1.0,
+        "original_index": 8,
+        "group_size": 1
+      }
+    ],
+    "9": [
+      {
+        "decoded_text": "Your words cut deep, deeper than",
+        "original_text": "Your words cut deep, deeper than any blade.",
+        "similarity": 1.0,
+        "decoded_confidence": 1.0,
+        "original_index": 9,
+        "group_size": 1
+      }
+    ],
+    "10": [
+      {
+        "decoded_text": "Zabuza: Boy, give me your kunai.",
+        "original_text": "Zabuza: Boy, give me your kunai.",
+        "similarity": 1.0,
+        "decoded_confidence": 1.0,
+        "original_index": 10,
+        "group_size": 1
+      }
+    ],
+    "11": [
+      {
+        "decoded_text": "*Gato getting destroyed by Zabuz",
+        "original_text": "*Gato getting destroyed by Zabuza*",
+        "similarity": 1.0,
+        "decoded_confidence": 1.0,
+        "original_index": 11,
+        "group_size": 1
+      }
+    ],
+    "12": [
+      {
+        "decoded_text": "*Gato taking a dip in the pool*",
+        "original_text": "*Gato taking a dip in the pool*",
+        "similarity": 1.0,
+        "decoded_confidence": 1.0,
+        "original_index": 12,
+        "group_size": 1
+      }
+    ]
+  },
+  "original_mean_scores": {
+    "1": 1.0,
+    "2": 1.0,
+    "3": 1.0,
+    "4": 1.0,
+    "5": 0.9429019457245265,
+    "6": 1.0,
+    "7": 1.0,
+    "8": 1.0,
+    "9": 1.0,
+    "10": 1.0,
+    "11": 1.0,
+    "12": 1.0
+  },
+  "noise_decodings": [],
+  "all_matches": [
+    {
+      "decoded_text": "*Naruto screaming in shock*",
+      "original_text": "*Naruto screaming in shock*",
+      "similarity": 1.0,
+      "decoded_confidence": 1.0,
+      "original_index": 1,
+      "group_size": 1
+    },
+    {
+      "decoded_text": "Kakashi: Calm down Naruto...",
+      "original_text": "Kakashi: Calm down Naruto...",
+      "similarity": 1.0,
+      "decoded_confidence": 1.0,
+      "original_index": 2,
+      "group_size": 1
+    },
+    {
+      "decoded_text": "Naruto: Be quiet, as far as I'm",
+      "original_text": "Naruto: Be quiet, as far as I'm concerned\nhe's enemy number one.",
+      "similarity": 1.0,
+      "decoded_confidence": 1.0,
+      "original_index": 3,
+      "group_size": 1
+    },
+    {
+      "decoded_text": "You were the most important thin",
+      "original_text": "You were the most important thing in the world\nto him, and he meant nothing to you?",
+      "similarity": 1.0,
+      "decoded_confidence": 1.0,
+      "original_index": 4,
+      "group_size": 1
+    },
+    {
+      "decoded_text": "Naruto: He threw his life away..",
+      "original_text": "Naruto: He threw his life away... and for\nwhat?",
+      "similarity": 1.0,
+      "decoded_confidence": 1.0,
+      "original_index": 5,
+      "group_size": 1
+    },
+    {
+      "decoded_text": "Naruto: He thsew his life away..",
+      "original_text": "Naruto: He threw his life away... and for\nwhat?",
+      "similarity": 0.96875,
+      "decoded_confidence": 1.0,
+      "original_index": 5,
+      "group_size": 1
+    },
+    {
+      "decoded_text": "Naruto: He threw his life away..",
+      "original_text": "Naruto: He threw his life away... and for\nwhat?",
+      "similarity": 1.0,
+      "decoded_confidence": 1.0,
+      "original_index": 5,
+      "group_size": 1
+    },
+    {
+      "decoded_text": "Naruto: X threw xis life away..",
+      "original_text": "Naruto: He threw his life away... and for\nwhat?",
+      "similarity": 0.9206349206349206,
+      "decoded_confidence": 1.0,
+      "original_index": 5,
+      "group_size": 1
+    },
+    {
+      "decoded_text": "Naruto: X threw his life away..",
+      "original_text": "Naruto: He threw his life away... and for\nwhat?",
+      "similarity": 0.9523809523809523,
+      "decoded_confidence": 1.0,
+      "original_index": 5,
+      "group_size": 1
+    },
+    {
+      "decoded_text": "Naruto: X threw xis lifm away..",
+      "original_text": "Naruto: He threw his life away... and for\nwhat?",
+      "similarity": 0.8888888888888888,
+      "decoded_confidence": 1.0,
+      "original_index": 5,
+      "group_size": 1
+    },
+    {
+      "decoded_text": "Naruoz X threw his life away..",
+      "original_text": "Naruto: He threw his life away... and for\nwhat?",
+      "similarity": 0.9032258064516129,
+      "decoded_confidence": 1.0,
+      "original_index": 5,
+      "group_size": 1
+    },
+    {
+      "decoded_text": "Naruo: Xe threw hiw lifm away..",
+      "original_text": "Naruto: He threw his life away... and for\nwhat?",
+      "similarity": 0.8888888888888888,
+      "decoded_confidence": 1.0,
+      "original_index": 5,
+      "group_size": 1
+    },
+    {
+      "decoded_text": "Naruto: Xe threw hiw lifm away..",
+      "original_text": "Naruto: He threw his life away... and for\nwhat?",
+      "similarity": 0.90625,
+      "decoded_confidence": 1.0,
+      "original_index": 5,
+      "group_size": 1
+    },
+    {
+      "decoded_text": "Naruto: He threw his life away..",
+      "original_text": "Naruto: He threw his life away... and for\nwhat?",
+      "similarity": 1.0,
+      "decoded_confidence": 1.0,
+      "original_index": 5,
+      "group_size": 1
+    },
+    {
+      "decoded_text": "Naruto: A broken tool.",
+      "original_text": "Naruto: A broken tool.",
+      "similarity": 1.0,
+      "decoded_confidence": 1.0,
+      "original_index": 6,
+      "group_size": 1
+    },
+    {
+      "decoded_text": "Man that's so wrong.",
+      "original_text": "Man that's so wrong.",
+      "similarity": 1.0,
+      "decoded_confidence": 1.0,
+      "original_index": 7,
+      "group_size": 1
+    },
+    {
+      "decoded_text": "Zabuza: You talk too much.",
+      "original_text": "Zabuza: You talk too much.",
+      "similarity": 1.0,
+      "decoded_confidence": 1.0,
+      "original_index": 8,
+      "group_size": 1
+    },
+    {
+      "decoded_text": "Your words cut deep, deeper than",
+      "original_text": "Your words cut deep, deeper than any blade.",
+      "similarity": 1.0,
+      "decoded_confidence": 1.0,
+      "original_index": 9,
+      "group_size": 1
+    },
+    {
+      "decoded_text": "Zabuza: Boy, give me your kunai.",
+      "original_text": "Zabuza: Boy, give me your kunai.",
+      "similarity": 1.0,
+      "decoded_confidence": 1.0,
+      "original_index": 10,
+      "group_size": 1
+    },
+    {
+      "decoded_text": "*Gato getting destroyed by Zabuz",
+      "original_text": "*Gato getting destroyed by Zabuza*",
+      "similarity": 1.0,
+      "decoded_confidence": 1.0,
+      "original_index": 11,
+      "group_size": 1
+    },
+    {
+      "decoded_text": "*Gato taking a dip in the pool*",
+      "original_text": "*Gato taking a dip in the pool*",
+      "similarity": 1.0,
+      "decoded_confidence": 1.0,
+      "original_index": 12,
+      "group_size": 1
+    }
+  ],
+  "noise_percentage": 0.0,
+  "average_best_score": 1.0,
+  "average_global_score": 0.9952418288103773,
+  "coverage_percentage": 1.0
+}

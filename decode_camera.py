@@ -100,7 +100,7 @@ class SimpleSubtitleDecoder:
         #print(f"📁 Exporté {len(self.decoded_subtitles)} sous-titres vers {filename}")
     
     def detect_white_circles(self, frame: np.ndarray) -> List[Tuple[int, int]]:
-        """Détection de cercles blancs avec redressement optionnel"""
+        """Détection de cercles par forme (peu importe la couleur)"""
         
         # AJOUTER DES CONTOURS ROUGES AUX COINS pour aider la détection
         frame_with_borders = self.add_red_borders(frame)
@@ -117,13 +117,11 @@ class SimpleSubtitleDecoder:
         # Conversion en niveaux de gris
         gray = cv2.cvtColor(working_frame, cv2.COLOR_BGR2GRAY)
         
-        # Seuillage pour détecter le blanc
-        _, white_mask = cv2.threshold(gray, 200, 255, cv2.THRESH_BINARY)
+        # Floutage gaussien pour réduire le bruit et améliorer la détection
+        blurred = cv2.GaussianBlur(gray, (5, 5), 1.5)
         
-        # Morphologie pour nettoyer
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-        white_mask = cv2.morphologyEx(white_mask, cv2.MORPH_OPEN, kernel)
-        white_mask = cv2.morphologyEx(white_mask, cv2.MORPH_CLOSE, kernel)
+        # Détection de contours avec Canny pour aider HoughCircles
+        edges = cv2.Canny(blurred, 30, 100)
         
         # Analyser chaque grille
         all_grid_detections = []
@@ -140,16 +138,11 @@ class SimpleSubtitleDecoder:
             if (grid_y_offset + grid_pixel_height <= frame_height and 
                 grid_x_offset + grid_pixel_width <= frame_width):
                 
-                grid_gray = gray[grid_y_offset:grid_y_offset + grid_pixel_height,
-                               grid_x_offset:grid_x_offset + grid_pixel_width]
-                grid_mask = white_mask[grid_y_offset:grid_y_offset + grid_pixel_height,
-                                     grid_x_offset:grid_x_offset + grid_pixel_width]
+                grid_blurred = blurred[grid_y_offset:grid_y_offset + grid_pixel_height,
+                                      grid_x_offset:grid_x_offset + grid_pixel_width]
             else:
                 all_grid_detections.append([])
                 continue
-            
-            # Appliquer le masque
-            masked_gray = cv2.bitwise_and(grid_gray, grid_mask)
             
             # Paramètres HoughCircles adaptatifs avec cas spéciaux
             if self.point_size == 1:
@@ -204,9 +197,9 @@ class SimpleSubtitleDecoder:
             if self.debug_mode:
                 print(f"🔍 Grid {grid_id}: point_size={self.point_size}, min_r={min_radius}, max_r={max_radius}, dist={min_dist}, p1={param1}, p2={param2}")
             
-            # DÉTECTION DE CERCLES
+            # DÉTECTION DE CERCLES PAR FORME (sans filtrage de couleur)
             circles = cv2.HoughCircles(
-                masked_gray,
+                grid_blurred,
                 cv2.HOUGH_GRADIENT,
                 dp=1,
                 minDist=min_dist,

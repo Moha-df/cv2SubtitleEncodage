@@ -1,76 +1,334 @@
 {
   "subtitles": [
     {
-      "text": "*Naruto screaming in shock*",
-      "timestamp": 1759688144.249717,
+      "text": "@`@ ` (",
+      "timestamp": 1760290110.6522677,
       "confidence": 1.0,
       "index": 0
     },
     {
-      "text": "Kakashi: Calm down Naruto...",
-      "timestamp": 1759688144.2497256,
+      "text": "K`k`shi* Balm$dnw Naruto...",
+      "timestamp": 1760290110.6522756,
       "confidence": 1.0,
       "index": 1
     },
     {
-      "text": "Naruto: Be quiet, as far as I'm",
-      "timestamp": 1759688144.2497275,
+      "text": "0",
+      "timestamp": 1760290110.6522768,
       "confidence": 1.0,
       "index": 2
     },
     {
-      "text": "You were the most important thin",
-      "timestamp": 1759688144.249728,
+      "text": "0@",
+      "timestamp": 1760290110.6522772,
       "confidence": 1.0,
       "index": 3
     },
     {
-      "text": "Naruto: He threw his life away..",
-      "timestamp": 1759688144.2497287,
+      "text": "0",
+      "timestamp": 1760290110.6522777,
       "confidence": 1.0,
       "index": 4
     },
     {
-      "text": "Naruto: A broken tool.",
-      "timestamp": 1759688144.2497303,
+      "text": "0@",
+      "timestamp": 1760290110.6522784,
       "confidence": 1.0,
       "index": 5
     },
     {
-      "text": "Man that's so wrong.",
-      "timestamp": 1759688144.2497308,
+      "text": "0",
+      "timestamp": 1760290110.6522791,
       "confidence": 1.0,
       "index": 6
     },
     {
-      "text": "Zabuza: You talk too much.",
-      "timestamp": 1759688144.2497315,
+      "text": "BAo  Pht `sfra '@",
+      "timestamp": 1760290110.6522796,
       "confidence": 1.0,
       "index": 7
     },
     {
-      "text": "Your words cut deep, deeper than",
-      "timestamp": 1759688144.249732,
+      "text": "@p1t/ ep( @`` @@",
+      "timestamp": 1760290110.6522799,
       "confidence": 1.0,
       "index": 8
     },
     {
-      "text": "Zabuza: Boy, give me your kunai.",
-      "timestamp": 1759688144.2497337,
+      "text": "a e o  eq!it !ad!` a!",
+      "timestamp": 1760290110.6522808,
       "confidence": 1.0,
       "index": 9
     },
     {
-      "text": "*Gato getting destroyed by Zabuz",
-      "timestamp": 1759688144.2497344,
+      "text": "` ``P`@rdr `  \"(",
+      "timestamp": 1760290110.6522813,
       "confidence": 1.0,
       "index": 10
     },
     {
-      "text": "*Gato taking a dip in the pool*",
-      "timestamp": 1759688144.249735,
+      "text": "`  @@P@`Rdr`0 \"H",
+      "timestamp": 1760290110.652282,
       "confidence": 1.0,
       "index": 11
+    },
+    {
+      "text": "`  @P@`Rdr`0 \"",
+      "timestamp": 1760290110.6522825,
+      "confidence": 1.0,
+      "index": 12
+    },
+    {
+      "text": "@@P@`Rdr `0 \"(",
+      "timestamp": 1760290110.6522832,
+      "confidence": 1.0,
+      "index": 13
+    },
+    {
+      "text": "`  @P@p Rdr` \"",
+      "timestamp": 1760290110.6522834,
+      "confidence": 1.0,
+      "index": 14
+    },
+    {
+      "text": "Quvr% THd loqt ih@l2tan4 th`$",
+      "timestamp": 1760290110.652284,
+      "confidence": 1.0,
+      "index": 15
+    },
+    {
+      "text": "Quvr% THd lkst ihn2tant 4h`$",
+      "timestamp": 1760290110.6522844,
+      "confidence": 1.0,
+      "index": 16
+    },
+    {
+      "text": "Quvr% THe lost ih@l2tant 4h`$",
+      "timestamp": 1760290110.652285,
+      "confidence": 1.0,
+      "index": 17
+    },
+    {
+      "text": "Qufr% THe lost ih@l2tan4 th@,",
+      "timestamp": 1760290110.652286,
+      "confidence": 1.0,
+      "index": 18
+    },
+    {
+      "text": "Qufr% THd lkst ih@l2tant 4h`,",
+      "timestamp": 1760290110.6522865,
+      "confidence": 1.0,
+      "index": 19
+    },
+    {
+      "text": "Qegr%THd lkqt ihl2pant 4h`,",
+      "timestamp": 1760290110.652287,
+      "confidence": 1.0,
+      "index": 20
+    },
+    {
+      "text": "Qugr%THe lost ih@l2tant th@,",
+      "timestamp": 1760290110.6522875,
+      "confidence": 1.0,
+      "index": 21
+    },
+    {
+      "text": "Qugr%THd lkqt ihl2tant 4h`,",
+      "timestamp": 1760290110.652288,
+      "confidence": 1.0,
+      "index": 22
+    },
+    {
+      "text": "Qegr%THd loqt ih`l2pant th@,",
+      "timestamp": 1760290110.6522884,
+      "confidence": 1.0,
+      "index": 23
+    },
+    {
+      "text": "Qugr% THe loqt ih@l2tant 4h`,",
+      "timestamp": 1760290110.6522887,
+      "confidence": 1.0,
+      "index": 24
+    },
+    {
+      "text": "You were the most impo2tant thin",
+      "timestamp": 1760290110.6522896,
+      "confidence": 1.0,
+      "index": 25
+    },
+    {
+      "text": "You were the most im`n\"tant thin",
+      "timestamp": 1760290110.65229,
+      "confidence": 1.0,
+      "index": 26
+    },
+    {
+      "text": "You were the most impnbtant thin",
+      "timestamp": 1760290110.6522906,
+      "confidence": 1.0,
+      "index": 27
+    },
+    {
+      "text": "You were dhe moct imporpant thin",
+      "timestamp": 1760290110.6522908,
+      "confidence": 1.0,
+      "index": 28
+    },
+    {
+      "text": "You weretHe mosd am`nbtanp thin",
+      "timestamp": 1760290110.652291,
+      "confidence": 1.0,
+      "index": 29
+    },
+    {
+      "text": "You were the mmst iipnrtant thin",
+      "timestamp": 1760290110.6522913,
+      "confidence": 1.0,
+      "index": 30
+    },
+    {
+      "text": "You wera the most importalt thin",
+      "timestamp": 1760290110.6522918,
+      "confidence": 1.0,
+      "index": 31
+    },
+    {
+      "text": "You ware the most impobtalt thin",
+      "timestamp": 1760290110.6522923,
+      "confidence": 1.0,
+      "index": 32
+    },
+    {
+      "text": "Naruto: He threw `is life away..",
+      "timestamp": 1760290110.6522932,
+      "confidence": 1.0,
+      "index": 33
+    },
+    {
+      "text": "2TC@@ ```ea `)`h` pp",
+      "timestamp": 1760290110.6522937,
+      "confidence": 1.0,
+      "index": 34
+    },
+    {
+      "text": "2' !P@`E` `pHf `p\"",
+      "timestamp": 1760290110.652294,
+      "confidence": 1.0,
+      "index": 35
+    },
+    {
+      "text": "2i A`h`%p `)p hf% px*",
+      "timestamp": 1760290110.6522942,
+      "confidence": 1.0,
+      "index": 36
+    },
+    {
+      "text": "/A``%` hip l)f vx.",
+      "timestamp": 1760290110.6522944,
+      "confidence": 1.0,
+      "index": 37
+    },
+    {
+      "text": "`p! `dbc Ac @iBEaa*",
+      "timestamp": 1760290110.6522949,
+      "confidence": 1.0,
+      "index": 38
+    },
+    {
+      "text": "`p `dbc`Aa DiEaa.",
+      "timestamp": 1760290110.652295,
+      "confidence": 1.0,
+      "index": 39
+    },
+    {
+      "text": "`q`  dbc`IsDiBEaa.",
+      "timestamp": 1760290110.6522954,
+      "confidence": 1.0,
+      "index": 40
+    },
+    {
+      "text": "`q ``bb`Ib@HiEaa.",
+      "timestamp": 1760290110.6522963,
+      "confidence": 1.0,
+      "index": 41
+    },
+    {
+      "text": "`q` `dbc`Ic @hBDaa..",
+      "timestamp": 1760290110.6522965,
+      "confidence": 1.0,
+      "index": 42
+    },
+    {
+      "text": "`p ```a`Ic @iBeaa*",
+      "timestamp": 1760290110.6522968,
+      "confidence": 1.0,
+      "index": 43
+    },
+    {
+      "text": "a2U4l !P \" C ( 3 $ f  tp.",
+      "timestamp": 1760290110.6522973,
+      "confidence": 1.0,
+      "index": 44
+    },
+    {
+      "text": "L@e0o0 !@hr`6 `)` `d pap",
+      "timestamp": 1760290110.6522975,
+      "confidence": 1.0,
+      "index": 45
+    },
+    {
+      "text": "`P%g Ed \"`(0,`  pp",
+      "timestamp": 1760290110.652298,
+      "confidence": 1.0,
+      "index": 46
+    },
+    {
+      "text": "`g A  @0$` pp",
+      "timestamp": 1760290110.6522982,
+      "confidence": 1.0,
+      "index": 47
+    },
+    {
+      "text": "@Aqd!  @$ `h`G `@ `H  p@",
+      "timestamp": 1760290110.6522987,
+      "confidence": 1.0,
+      "index": 48
+    },
+    {
+      "text": "@%(2l`   wx",
+      "timestamp": 1760290110.652299,
+      "confidence": 1.0,
+      "index": 49
+    },
+    {
+      "text": "@ @4..",
+      "timestamp": 1760290110.6522994,
+      "confidence": 1.0,
+      "index": 50
+    },
+    {
+      "text": "(, 4H.",
+      "timestamp": 1760290110.6523001,
+      "confidence": 1.0,
+      "index": 51
+    },
+    {
+      "text": "@@+./(",
+      "timestamp": 1760290110.6523004,
+      "confidence": 1.0,
+      "index": 52
+    },
+    {
+      "text": "@B",
+      "timestamp": 1760290110.652301,
+      "confidence": 1.0,
+      "index": 53
+    },
+    {
+      "text": "@`00 BE",
+      "timestamp": 1760290110.6523013,
+      "confidence": 1.0,
+      "index": 54
     }
   ]
 }

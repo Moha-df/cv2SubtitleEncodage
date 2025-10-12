@@ -12,15 +12,26 @@ import argparse
 import os
 
 class SubtitleEncoderVisibleLarge:
-    def __init__(self, grid_size: Tuple[int, int] = (16, 16)):
+    def __init__(self, grid_size: Tuple[int, int] = (16, 16), 
+                 camouflage_level: int = 0, 
+                 local_radius: int = 0):
         """
         Encodeur avec 4 grilles dans les coins (grilles 16x16 chacune)
+        
+        Args:
+            grid_size: Taille de chaque grille (width, height)
+            camouflage_level: 0-100, 0=blanc pur, 100=couleur locale
+            local_radius: Rayon de la zone locale (0=moyenne de toute la frame)
         """
         self.grid_width, self.grid_height = grid_size
         self.grid_size = grid_size
         self.point_size = 6  # Disques adaptés pour grilles 16x16
         self.point_intensity = 255  # Blanc pur
         self.num_grids = 4  # 4 grilles dans les coins
+        
+        # Nouveaux paramètres de camouflage
+        self.camouflage_level = max(0, min(100, camouflage_level))  # Clamp entre 0-100
+        self.local_radius = max(0, local_radius)
         
         # Offsets pour rendre chaque grille différente visuellement
         self.grid_offsets = [0, 5, 10, 15]  # Grille 0: pas d'offset, 1: +5, 2: +10, 3: +15
@@ -99,10 +110,59 @@ class SubtitleEncoderVisibleLarge:
         
         return positions
     
+    def get_local_color(self, frame: np.ndarray, center_x: int, center_y: int, 
+                       frame_avg_color: np.ndarray) -> Tuple[int, int, int]:
+        """
+        Calcule la couleur adaptative basée sur le camouflage_level
+        
+        Args:
+            frame: Image source
+            center_x, center_y: Position du centre du cercle
+            frame_avg_color: Couleur moyenne de toute la frame (fallback)
+            
+        Returns:
+            Tuple (B, G, R) de la couleur à utiliser
+        """
+        if self.camouflage_level == 0:
+            # Pas de camouflage : blanc pur
+            return (255, 255, 255)
+        
+        height, width = frame.shape[:2]
+        
+        if self.local_radius == 0:
+            # Utiliser la moyenne de toute la frame
+            local_color = frame_avg_color
+        else:
+            # Extraire la région locale
+            y1 = max(0, center_y - self.local_radius)
+            y2 = min(height, center_y + self.local_radius)
+            x1 = max(0, center_x - self.local_radius)
+            x2 = min(width, center_x + self.local_radius)
+            
+            local_region = frame[y1:y2, x1:x2]
+            
+            if local_region.size == 0:
+                local_color = frame_avg_color
+            else:
+                local_color = np.mean(local_region, axis=(0, 1))
+        
+        # Interpolation linéaire entre blanc (255, 255, 255) et couleur locale
+        white = np.array([255, 255, 255], dtype=np.float32)
+        blend_factor = self.camouflage_level / 100.0
+        
+        blended_color = white * (1 - blend_factor) + local_color * blend_factor
+        
+        return tuple(int(c) for c in blended_color)
+    
     def add_visible_points(self, frame: np.ndarray, positions: List[Tuple[int, int, int]], 
                           frame_width: int, frame_height: int) -> np.ndarray:
-        """Ajoute des disques BLANCS parfaitement ronds sur 4 grilles"""
+        """Ajoute des disques adaptatifs sur 4 grilles"""
         modified_frame = frame.copy()
+        
+        # Précalculer la couleur moyenne de toute la frame si besoin
+        frame_avg_color = None
+        if self.camouflage_level > 0:
+            frame_avg_color = np.mean(frame, axis=(0, 1))
         
         # Taille de chaque grille (40% de l'écran pour éviter les chevauchements)
         grid_pixel_width = int(frame_width * 0.48)
@@ -120,10 +180,12 @@ class SubtitleEncoderVisibleLarge:
             center_x = grid_x_offset + x * cell_width + cell_width // 2
             center_y = grid_y_offset + y * cell_height + cell_height // 2
             
-            # Disque blanc parfait avec anti-aliasing
-            cv2.circle(modified_frame, (center_x, center_y), self.point_size, (255, 255, 255), -1, cv2.LINE_AA)
-            # Contour noir fin
-            #cv2.circle(modified_frame, (center_x, center_y), self.point_size + 1, (0, 0, 0), 1, cv2.LINE_AA)
+            # Déterminer la couleur du point
+            point_color = self.get_local_color(frame, center_x, center_y, frame_avg_color)
+            
+            # Disque avec anti-aliasing
+            cv2.circle(modified_frame, (center_x, center_y), self.point_size, 
+                      point_color, -1, cv2.LINE_AA)
         
         return modified_frame
     
@@ -160,6 +222,8 @@ class SubtitleEncoderVisibleLarge:
     def encode_video(self, video_path: str, srt_path: str, output_path: str):
         """Encode la vidéo"""
         print(f"Parsing des sous-titres avec {self.num_grids} grilles de {self.grid_width}×{self.grid_height}...")
+        print(f"Camouflage: {self.camouflage_level}% (rayon local: {self.local_radius}px)")
+        
         subtitles = self.parse_srt(srt_path)
         print(f"Trouvé {len(subtitles)} sous-titres")
         
@@ -189,10 +253,12 @@ class SubtitleEncoderVisibleLarge:
             'grid_size': self.grid_size,
             'num_grids': self.num_grids,
             'grid_positions': self.grid_positions,
-            'grid_offsets': self.grid_offsets,  # Ajouter les offsets
+            'grid_offsets': self.grid_offsets,
             'point_size': self.point_size,
             'point_intensity': self.point_intensity,
-            'encoding_type': 'white_circles_4_grids_with_offsets',
+            'camouflage_level': self.camouflage_level,
+            'local_radius': self.local_radius,
+            'encoding_type': 'adaptive_color_circles_4_grids',
             'video_properties': {
                 'fps': fps,
                 'width': width,
@@ -265,6 +331,8 @@ def main():
     parser.add_argument('--grid-width', type=int, default=16, help='Largeur de chaque grille (4 grilles au total)')
     parser.add_argument('--grid-height', type=int, default=16, help='Hauteur de chaque grille (4 grilles au total)')
     parser.add_argument('--point-size', type=int, default=6, help='Taille des cercles en pixels')
+    parser.add_argument('--camouflage', type=int, default=0, help='Niveau de camouflage 0-100 (0=blanc, 100=couleur locale)')
+    parser.add_argument('--local-radius', type=int, default=0, help='Rayon zone locale (0=moyenne frame entière)')
     
     args = parser.parse_args()
     
@@ -276,7 +344,11 @@ def main():
         print(f"Erreur: {args.srt} n'existe pas")
         return
     
-    encoder = SubtitleEncoderVisibleLarge(grid_size=(args.grid_width, args.grid_height))
+    encoder = SubtitleEncoderVisibleLarge(
+        grid_size=(args.grid_width, args.grid_height),
+        camouflage_level=args.camouflage,
+        local_radius=args.local_radius
+    )
     
     # Configurer la taille des points si spécifiée
     if hasattr(args, 'point_size') and args.point_size:
