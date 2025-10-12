@@ -51,10 +51,10 @@ class SimpleSubtitleDecoder:
         self.screen_corners = None
         self.corner_buffer = deque(maxlen=5)
         
-        print(f"🎯 Décodeur SIMPLE initialisé")
-        print(f"📱 Grille: {self.grid_width}×{self.grid_height}")
-        print(f"🔴 Taille points: {self.point_size}")
-        print(f"⚙️ Offsets: {self.grid_offsets}")
+        #print(f"🎯 Décodeur SIMPLE initialisé")
+        #print(f"📱 Grille: {self.grid_width}×{self.grid_height}")
+        #print(f"🔴 Taille points: {self.point_size}")
+        #print(f"⚙️ Offsets: {self.grid_offsets}")
     
     def load_mapping_config(self, mapping_file: str, override_point_size: bool = True):
         """Charge la configuration depuis un fichier de mapping JSON"""
@@ -66,17 +66,17 @@ class SimpleSubtitleDecoder:
             # Charger les offsets si disponibles
             if 'grid_offsets' in mapping_data:
                 self.grid_offsets = mapping_data['grid_offsets']
-                print(f"✅ Offsets chargés depuis {mapping_file}: {self.grid_offsets}")
+                #print(f"✅ Offsets chargés depuis {mapping_file}: {self.grid_offsets}")
             
             # Charger les autres paramètres si disponibles
             if 'grid_positions' in mapping_data:
                 self.grid_positions = mapping_data['grid_positions']
-                print(f"✅ Positions grilles chargées: {len(self.grid_positions)} grilles")
+                #print(f"✅ Positions grilles chargées: {len(self.grid_positions)} grilles")
             
             # Ne charger point_size que si autorisé
             if 'point_size' in mapping_data and override_point_size:
                 self.point_size = mapping_data['point_size']
-                print(f"✅ Taille points chargée: {self.point_size}px")
+                #print(f"✅ Taille points chargée: {self.point_size}px")
                 
         except Exception as e:
             print(f"⚠️ Impossible de charger {mapping_file}: {e}")
@@ -97,7 +97,7 @@ class SimpleSubtitleDecoder:
         with open(filename, 'w', encoding='utf-8') as f:
             json.dump(output_data, f, indent=2, ensure_ascii=False)
         
-        print(f"📁 Exporté {len(self.decoded_subtitles)} sous-titres vers {filename}")
+        #print(f"📁 Exporté {len(self.decoded_subtitles)} sous-titres vers {filename}")
     
     def detect_white_circles(self, frame: np.ndarray) -> List[Tuple[int, int]]:
         """Détection de cercles blancs avec redressement optionnel"""
@@ -159,7 +159,7 @@ class SimpleSubtitleDecoder:
                 min_dist = 1
                 param1 = 10  # Sensibilité absolue
                 param2 = 2   # Seuil critique minimal
-                print(f"🔥🔥🔥 Paramètres ULTRA-EXTRÊMES pour point_size=1 (limite absolue!)")
+                #print(f"🔥🔥🔥 Paramètres ULTRA-EXTRÊMES pour point_size=1 (limite absolue!)")
             elif self.point_size == 2:
                 # Paramètres ultra-spéciaux pour les cercles minuscules (2px)
                 min_radius = 1
@@ -167,7 +167,7 @@ class SimpleSubtitleDecoder:
                 min_dist = 1
                 param1 = 15  # Extrêmement sensible
                 param2 = 3   # Seuil très très bas
-                print(f"🔥🔥 Paramètres ULTRA-spéciaux pour point_size=2")
+                #print(f"🔥🔥 Paramètres ULTRA-spéciaux pour point_size=2")
             elif self.point_size == 3:
                 # Paramètres spéciaux pour les très petits cercles (3px)
                 min_radius = 1
@@ -175,7 +175,7 @@ class SimpleSubtitleDecoder:
                 min_dist = 2
                 param1 = 20  # Très sensible
                 param2 = 5   # Très sensible
-                print(f"🔥 Paramètres spéciaux pour point_size=3")
+                #print(f"🔥 Paramètres spéciaux pour point_size=3")
             elif self.point_size == 7:
                 # Paramètres spéciaux pour les cercles moyens-gros (7px)
                 min_radius = 6
@@ -183,7 +183,15 @@ class SimpleSubtitleDecoder:
                 min_dist = 6
                 param1 = 45  # Moins sensible pour éviter le bruit
                 param2 = 13  # Seuil plus élevé
-                print(f"⭐ Paramètres spéciaux pour point_size=7")
+                #print(f"⭐ Paramètres spéciaux pour point_size=7")
+            elif self.point_size == 6:
+                # Paramètres spéciaux pour les cercles moyens (6px)
+                min_radius = 5
+                max_radius = 8
+                min_dist = 5
+                param1 = 100  # Sensibilité modérée
+                param2 = 10  # Seuil modéré
+                #print(f"🌟 Paramètres spéciaux pour point_size=6")
             else:
                 # Paramètres normaux pour autres tailles
                 min_radius = max(1, self.point_size - 3)
@@ -211,7 +219,7 @@ class SimpleSubtitleDecoder:
             # DEBUG: Afficher le résultat de la détection
             if self.debug_mode:
                 circles_count = len(circles[0]) if circles is not None else 0
-                print(f"🎯 Grid {grid_id}: {circles_count} cercles détectés")
+                #print(f"🎯 Grid {grid_id}: {circles_count} cercles détectés")
                 if circles_count == 0:
                     print(f"❌ Grid {grid_id}: Aucun cercle détecté avec ces paramètres")
             
@@ -259,15 +267,13 @@ class SimpleSubtitleDecoder:
         
         if self.debug_mode:
             total_detections = sum(len(detections) for detections in all_grid_detections)
-            print(f"📊 TOTAL: {total_detections} détections brutes → {len(voted_positions)} positions validées par vote")
+            #print(f"📊 TOTAL: {total_detections} détections brutes → {len(voted_positions)} positions validées par vote")
             
             # Debug détaillé par grille
             for i, detections in enumerate(all_grid_detections):
                 print(f"   Grid {i}: {len(detections)} détections")
-            
-            if total_detections > 0 and len(voted_positions) == 0:
-                print("⚠️ DES CERCLES DÉTECTÉS MAIS AUCUN VOTE MAJORITAIRE!")
-            elif total_detections == 0:
+
+            if total_detections == 0:
                 print("❌ AUCUN CERCLE DÉTECTÉ DANS AUCUNE GRILLE")
         
         # Stocker la frame de travail pour l'affichage
@@ -585,7 +591,7 @@ class SimpleSubtitleDecoder:
         # Statut debug redressement
         debug_redress_status = "ON" if self.debug_perspective else "OFF"
         debug_redress_color = (0, 255, 255) if self.debug_perspective else (128, 128, 128)
-        cv2.putText(display_frame, f"Debug redress: {debug_redress_status}", (15, 55),
+        cv2.putText(display_frame, f"Debug redresse: {debug_redress_status}", (15, 55),
                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, debug_redress_color, 1)
         
         # Statut détection des coins
@@ -619,41 +625,46 @@ class SimpleSubtitleDecoder:
         """Traite une vidéo"""
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
-            print(f"❌ Impossible d'ouvrir: {video_path}")
+            #print(f"❌ Impossible d'ouvrir: {video_path}")
             return
         
-        print(f"🎥 Traitement de: {video_path}")
+        #print(f"🎥 Traitement de: {video_path}")
         
         cv2.namedWindow('Subtitles Decoder', cv2.WINDOW_AUTOSIZE)
+        
+        frame_count = 0  # Compteur de frames
         
         while True:
             ret, frame = cap.read()
             if not ret:
                 break
             
-            # DÉTECTION
-            positions = self.detect_white_circles(frame)
-            
-            if positions:
-                # Convertir en texte
-                binary_str = self.positions_to_binary(positions)
-                text = self.binary_to_text(binary_str)
+            frame_count += 1
+            # Ne traiter qu'une frame sur 5
+            if frame_count % 5 == 0:
+                # DÉTECTION
+                positions = self.detect_white_circles(frame)
                 
-                if text:
-                    self.detection_buffer.append(text)
+                if positions:
+                    # Convertir en texte
+                    binary_str = self.positions_to_binary(positions)
+                    text = self.binary_to_text(binary_str)
                     
-                    # Prendre le texte le plus fréquent
-                    if len(self.detection_buffer) >= 3:
-                        from collections import Counter
-                        most_common = Counter(self.detection_buffer).most_common(1)
-                        if most_common:
-                            new_subtitle = most_common[0][0]
-                            if new_subtitle != self.current_subtitle:
-                                self.current_subtitle = new_subtitle
-                                self.decoded_subtitles.append(new_subtitle)
-                                print(f"💾 Stocké: '{new_subtitle[:50]}...'")
+                    if text:
+                        self.detection_buffer.append(text)
+                        
+                        # Prendre le texte le plus fréquent
+                        if len(self.detection_buffer) >= 3:
+                            from collections import Counter
+                            most_common = Counter(self.detection_buffer).most_common(1)
+                            if most_common:
+                                new_subtitle = most_common[0][0]
+                                if new_subtitle != self.current_subtitle:
+                                    self.current_subtitle = new_subtitle
+                                    self.decoded_subtitles.append(new_subtitle)
+                                    #print(f"💾 Stocké: '{new_subtitle[:50]}...'")
             
-            # AFFICHAGE
+            # AFFICHAGE (toujours afficher pour fluidité visuelle)
             display_frame = self.draw_overlay(frame)
             cv2.imshow('Subtitles Decoder', display_frame)
             
@@ -663,11 +674,11 @@ class SimpleSubtitleDecoder:
                 break
             elif key == ord('d'):
                 self.debug_mode = not self.debug_mode
-                print(f"🐛 Debug: {'ON' if self.debug_mode else 'OFF'}")
+                #print(f"🐛 Debug: {'ON' if self.debug_mode else 'OFF'}")
             elif key == ord('c'):
                 self.current_subtitle = ""
                 self.detection_buffer.clear()
-                print("🧹 Cleared")
+                #print("🧹 Cleared")
         
         cap.release()
         cv2.destroyAllWindows()
@@ -684,46 +695,52 @@ class SimpleSubtitleDecoder:
         """Traite la caméra"""
         cap = cv2.VideoCapture(camera_id)
         if not cap.isOpened():
-            print(f"❌ Impossible d'ouvrir caméra: {camera_id}")
+            #print(f"❌ Impossible d'ouvrir caméra: {camera_id}")
             return
         
-        print(f"📷 Caméra: {camera_id}")
-        print("🎮 Contrôles actifs:")
-        print("  'r': Activer/désactiver redressement perspective")
-        print("  'f': Debug redressement (fenêtre séparée avec coins)")
-        print("  'd': Debug cercles, 'c': clear, 'q': quit")
-        print("")
-        print("🔴 ASTUCE: Les contours rouges aux coins aident la détection !")
-        print("   Placez l'écran bien visible avec ses 4 coins dans la caméra")
+        #print(f"📷 Caméra: {camera_id}")
+        #print("🎮 Contrôles actifs:")
+        #print("  'r': Activer/désactiver redressement perspective")
+        #print("  'f': Debug redressement (fenêtre séparée avec coins)")
+        #print("  'd': Debug cercles, 'c': clear, 'q': quit")
+        #print("")
+        #print("🔴 ASTUCE: Les contours rouges aux coins aident la détection !")
+        #print("   Placez l'écran bien visible avec ses 4 coins dans la caméra")
         
         cv2.namedWindow('Subtitles Decoder', cv2.WINDOW_AUTOSIZE)
+        
+        frame_count = 0  # Compteur de frames
         
         while True:
             ret, frame = cap.read()
             if not ret:
                 continue
             
-            # DÉTECTION
-            positions = self.detect_white_circles(frame)
+            frame_count += 1
             
-            if positions:
-                binary_str = self.positions_to_binary(positions)
-                text = self.binary_to_text(binary_str)
+            # Ne traiter qu'une frame sur 10
+            if frame_count % 5 == 0:
+                # DÉTECTION
+                positions = self.detect_white_circles(frame)
                 
-                if text:
-                    self.detection_buffer.append(text)
+                if positions:
+                    binary_str = self.positions_to_binary(positions)
+                    text = self.binary_to_text(binary_str)
                     
-                    if len(self.detection_buffer) >= 3:
-                        from collections import Counter
-                        most_common = Counter(self.detection_buffer).most_common(1)
-                        if most_common:
-                            new_subtitle = most_common[0][0]
-                            if new_subtitle != self.current_subtitle:
-                                self.current_subtitle = new_subtitle
-                                self.decoded_subtitles.append(new_subtitle)
-                                print(f"💾 Stocké: '{new_subtitle[:50]}...'")
+                    if text:
+                        self.detection_buffer.append(text)
+                        
+                        if len(self.detection_buffer) >= 3:
+                            from collections import Counter
+                            most_common = Counter(self.detection_buffer).most_common(1)
+                            if most_common:
+                                new_subtitle = most_common[0][0]
+                                if new_subtitle != self.current_subtitle:
+                                    self.current_subtitle = new_subtitle
+                                    self.decoded_subtitles.append(new_subtitle)
+                                    #print(f"💾 Stocké: '{new_subtitle[:50]}...'")
             
-            # AFFICHAGE
+            # AFFICHAGE (toujours afficher pour fluidité visuelle)
             display_frame = self.draw_overlay(frame)
             cv2.imshow('Subtitles Decoder', display_frame)
             
@@ -733,11 +750,11 @@ class SimpleSubtitleDecoder:
                 break
             elif key == ord('d'):
                 self.debug_mode = not self.debug_mode
-                print(f"🐛 Debug cercles: {'ON' if self.debug_mode else 'OFF'}")
+                #print(f"🐛 Debug cercles: {'ON' if self.debug_mode else 'OFF'}")
             elif key == ord('c'):
                 self.current_subtitle = ""
                 self.detection_buffer.clear()
-                print("🧹 Cleared")
+                #print("🧹 Cleared")
             elif key == ord('r'):
                 self.perspective_correction = not self.perspective_correction
                 if not self.perspective_correction:
@@ -746,7 +763,7 @@ class SimpleSubtitleDecoder:
                     self.corner_buffer.clear()
                     cv2.destroyWindow('Perspective Debug')
                 status = "ACTIVÉ" if self.perspective_correction else "DÉSACTIVÉ"
-                print(f"🔄 Redressement: {status}")
+                #print(f"🔄 Redressement: {status}")
                 if self.perspective_correction:
                     print("   → Cherche les contours rouges aux coins de l'écran...")
             elif key == ord('f'):
@@ -755,7 +772,7 @@ class SimpleSubtitleDecoder:
                     if not self.debug_perspective:
                         cv2.destroyWindow('Perspective Debug')
                     status = "ACTIVÉ" if self.debug_perspective else "DÉSACTIVÉ"
-                    print(f"🔍 Debug redressement: {status}")
+                    #print(f"🔍 Debug redressement: {status}")
                     if self.debug_perspective:
                         print("   → Fenêtre 'Perspective Debug' ouverte")
                 else:
@@ -791,19 +808,19 @@ def main():
         if source.isdigit():
             # C'est un numéro de caméra
             camera_id = int(source)
-            print(f"📷 Mode caméra {camera_id}")
-            print("🎮 Contrôles:")
-            print("  'q': Quitter")
-            print("  'd': Debug cercles ON/OFF")
-            print("  'r': Redressement ON/OFF (détecte les coins)")
-            print("  'f': Debug redressement ON/OFF (fenêtre debug)")
-            print("  'c': Clear sous-titres")
-            print("")
-            print("🔴 Les contours ROUGES aux coins aident la détection !")
+            #print(f"📷 Mode caméra {camera_id}")
+            #print("🎮 Contrôles:")
+            #print("  'q': Quitter")
+            #print("  'd': Debug cercles ON/OFF")
+            #print("  'r': Redressement ON/OFF (détecte les coins)")
+            #print("  'f': Debug redressement ON/OFF (fenêtre debug)")
+            #print("  'c': Clear sous-titres")
+            #print("")
+            #print("🔴 Les contours ROUGES aux coins aident la détection !")
             decoder.process_camera(camera_id)
         else:
             # C'est un fichier vidéo
-            print(f"🎥 Mode vidéo: {source}")
+            #print(f"🎥 Mode vidéo: {source}")
             
             # Essayer de charger le fichier de mapping correspondant
             video_name = source.replace('.mp4', '')
@@ -819,21 +836,21 @@ def main():
             
             for mapping_file in possible_mapping_files:
                 if os.path.exists(mapping_file):
-                    print(f"📂 Chargement des paramètres depuis: {mapping_file}")
+                    #print(f"📂 Chargement des paramètres depuis: {mapping_file}")
                     decoder.load_mapping_config(mapping_file, override_point_size=False)
-                    print(f"🔧 Point size conservé: {original_point_size}px (argument)")
+                    #print(f"🔧 Point size conservé: {original_point_size}px (argument)")
                     mapping_loaded = True
                     break
             
             if not mapping_loaded:
                 print("⚠️ Aucun fichier de mapping trouvé, utilisation des paramètres par défaut")
             
-            print("🎮 Contrôles: 'q' quitter, 'd' debug, 'c' clear")
-            print("📺 Mode vidéo = PAS de redressement (inutile)")
+            #print("🎮 Contrôles: 'q' quitter, 'd' debug, 'c' clear")
+            #print("📺 Mode vidéo = PAS de redressement (inutile)")
             decoder.process_video(source)
             
     except Exception as e:
-        print(f"❌ Erreur: {e}")
+        #print(f"❌ Erreur: {e}")
         import traceback
         traceback.print_exc()
 

@@ -122,8 +122,8 @@ class SubtitleEncoderVisibleLarge:
             
             # Disque blanc parfait avec anti-aliasing
             cv2.circle(modified_frame, (center_x, center_y), self.point_size, (255, 255, 255), -1, cv2.LINE_AA)
-            # Contour noir fin pour améliorer la détection
-            cv2.circle(modified_frame, (center_x, center_y), self.point_size + 1, (0, 0, 0), 1, cv2.LINE_AA)
+            # Contour noir fin
+            #cv2.circle(modified_frame, (center_x, center_y), self.point_size + 1, (0, 0, 0), 1, cv2.LINE_AA)
         
         return modified_frame
     
