@@ -100,28 +100,36 @@ class SimpleSubtitleDecoder:
         #print(f"📁 Exporté {len(self.decoded_subtitles)} sous-titres vers {filename}")
     
     def detect_white_circles(self, frame: np.ndarray) -> List[Tuple[int, int]]:
-        """Détection de cercles par forme (peu importe la couleur)"""
+        """Détection de cercles par forme (peu importe la couleur) - optimisée pour caméra"""
         
-        # AJOUTER DES CONTOURS ROUGES AUX COINS pour aider la détection
-        frame_with_borders = self.add_red_borders(frame)
-        
-        # Redressement si activé (pour caméra)
-        working_frame = frame_with_borders
+        # Redressement si activé (pour caméra) - AVANT d'ajouter les contours
+        working_frame = frame.copy()
         if self.perspective_correction:
-            corrected = self.apply_perspective_correction(frame_with_borders)
+            corrected = self.apply_perspective_correction(frame)
             if corrected is not None:
                 working_frame = corrected
+        
+        # AJOUTER DES CONTOURS ROUGES AUX COINS pour aider la détection
+        working_frame = self.add_red_borders(working_frame)
         
         frame_height, frame_width = working_frame.shape[:2]
         
         # Conversion en niveaux de gris
         gray = cv2.cvtColor(working_frame, cv2.COLOR_BGR2GRAY)
         
-        # Floutage gaussien pour réduire le bruit et améliorer la détection
-        blurred = cv2.GaussianBlur(gray, (5, 5), 1.5)
+        # **PRÉ-TRAITEMENT AMÉLIORÉ POUR CAMÉRA**
+        # 1. Équalization du contraste
+        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+        gray = clahe.apply(gray)
         
-        # Détection de contours avec Canny pour aider HoughCircles
-        edges = cv2.Canny(blurred, 30, 100)
+        # 2. Floutage gaussien pour réduire le bruit
+        blurred = cv2.GaussianBlur(gray, (7, 7), 2.0)
+        
+        # 3. Détection de contours avec Canny multi-seuils
+        edges1 = cv2.Canny(blurred, 20, 60)
+        edges2 = cv2.Canny(blurred, 40, 120)
+        edges3 = cv2.Canny(blurred, 60, 180)
+        edges = cv2.bitwise_or(cv2.bitwise_or(edges1, edges2), edges3)
         
         # Analyser chaque grille
         all_grid_detections = []
@@ -179,24 +187,28 @@ class SimpleSubtitleDecoder:
                 #print(f"⭐ Paramètres spéciaux pour point_size=7")
             elif self.point_size == 6:
                 # Paramètres spéciaux pour les cercles moyens (6px)
-                min_radius = 5
+                # ÉQUILIBRE FIN : légèrement moins permissif
+                min_radius = 4
                 max_radius = 8
-                min_dist = 5
-                param1 = 40  # Sensibilité modérée
-                param2 = 12  # Seuil modéré
+                min_dist = 6
+                param1 = 37   # Légèrement plus strict
+                param2 = 11   # Légèrement plus strict
             else:
                 # Paramètres normaux pour autres tailles
-                min_radius = max(1, self.point_size - 3)
-                max_radius = self.point_size + 5
-                min_dist = max(4, self.point_size - 1)
-                param1 = 30
-                param2 = 8
+                min_radius = max(1, self.point_size - 2)
+                max_radius = self.point_size + 3
+                min_dist = max(5, self.point_size - 1)
+                param1 = 37   # Légèrement plus strict
+                param2 = 11   # Légèrement plus strict
             
             # DEBUG: Afficher les paramètres utilisés
             if self.debug_mode:
                 print(f"🔍 Grid {grid_id}: point_size={self.point_size}, min_r={min_radius}, max_r={max_radius}, dist={min_dist}, p1={param1}, p2={param2}")
             
-            # DÉTECTION DE CERCLES PAR FORME (sans filtrage de couleur)
+            # DÉTECTION DE CERCLES PAR FORME - ÉQUILIBRÉ AVEC FALLBACK
+            circles = None
+            
+            # **STRATÉGIE 1 : Légèrement permissif**
             circles = cv2.HoughCircles(
                 grid_blurred,
                 cv2.HOUGH_GRADIENT,
@@ -207,6 +219,19 @@ class SimpleSubtitleDecoder:
                 minRadius=min_radius,
                 maxRadius=max_radius
             )
+            
+            # **STRATÉGIE 2 : Si très peu de cercles, relâcher davantage**
+            if circles is None or len(circles[0]) < 3:
+                circles = cv2.HoughCircles(
+                    grid_blurred,
+                    cv2.HOUGH_GRADIENT,
+                    dp=1,
+                    minDist=max(2, min_dist - 3),
+                    param1=max(25, param1 - 10),
+                    param2=max(6, param2 - 4),
+                    minRadius=max(1, min_radius - 1),
+                    maxRadius=max_radius + 2
+                )
             
             # DEBUG: Afficher le résultat de la détection
             if self.debug_mode:
@@ -224,7 +249,60 @@ class SimpleSubtitleDecoder:
                 cell_width = grid_pixel_width / self.grid_width
                 cell_height = grid_pixel_height / self.grid_height
                 
+                # **FILTRAGE INTELLIGENT DES FAUX POSITIFS**
                 for (x, y, r) in circles:
+                    # 1️⃣ Rejeter les cercles trop petits ou trop gros par rapport à point_size
+                    if r < self.point_size * 0.63 or r > self.point_size * 1.9:
+                        continue
+                    
+                    # 2️⃣ Vérifier la "circularité" du cercle (ratio contraste)
+                    # Extraire la région autour du cercle
+                    y1 = max(0, y - r - 2)
+                    y2 = min(grid_blurred.shape[0], y + r + 3)
+                    x1 = max(0, x - r - 2)
+                    x2 = min(grid_blurred.shape[1], x + r + 3)
+                    
+                    if y2 - y1 < 3 or x2 - x1 < 3:
+                        continue
+                    
+                    circle_region = grid_blurred[y1:y2, x1:x2]
+                    
+                    # Calculer le contraste dans la région
+                    try:
+                        mean_val = np.mean(circle_region)
+                        std_val = np.std(circle_region)
+                        
+                        # Rejeter si pas assez de contraste (= probable bruit)
+                        if std_val < 7:  # Légèrement plus strict (6 → 7)
+                            continue
+                    except:
+                        continue
+                    
+                    # 3️⃣ Vérifier que le centre du cercle a une bonne intensité
+                    center_intensity = grid_blurred[y, x] if 0 <= y < grid_blurred.shape[0] and 0 <= x < grid_blurred.shape[1] else 0
+                    if center_intensity < 37:  # Légèrement plus strict (35 → 37)
+                        continue
+                    
+                    # 4️⃣ NOUVEAU : Vérifier que c'est bien un cercle (pas une tache)
+                    # Comparer l'intensité du centre vs les bords
+                    try:
+                        # Échantillonner des points sur le bord du cercle
+                        edge_samples = []
+                        for angle in [0, 45, 90, 135, 180, 225, 270, 315]:
+                            rad = np.radians(angle)
+                            ex = int(x + r * np.cos(rad))
+                            ey = int(y + r * np.sin(rad))
+                            if 0 <= ex < grid_blurred.shape[1] and 0 <= ey < grid_blurred.shape[0]:
+                                edge_samples.append(grid_blurred[ey, ex])
+                        
+                        if edge_samples:
+                            edge_mean = np.mean(edge_samples)
+                            # Le contraste entre centre et bord doit être significatif
+                            if abs(center_intensity - edge_mean) < 13:  # Légèrement plus strict (12 → 13)
+                                continue
+                    except:
+                        pass
+                    
                     # Convertir en position de grille
                     grid_x = int(x // cell_width)
                     grid_y = int(y // cell_height)
@@ -332,19 +410,24 @@ class SimpleSubtitleDecoder:
         """Détecte les coins de l'écran pour le redressement"""
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         
-        # Pré-traitement pour améliorer la détection
+        # Pré-traitement amélioré pour meilleure détection
         gray = cv2.medianBlur(gray, 5)
         gray = cv2.bilateralFilter(gray, 9, 75, 75)
         
-        # Détection de contours multi-seuils
-        edges1 = cv2.Canny(gray, 20, 60, apertureSize=3)
-        edges2 = cv2.Canny(gray, 40, 120, apertureSize=3)
-        edges = cv2.bitwise_or(edges1, edges2)
+        # CLAHE pour améliorer le contraste
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        gray = clahe.apply(gray)
+        
+        # Détection de contours multi-seuils améliorée
+        edges1 = cv2.Canny(gray, 15, 50, apertureSize=3)
+        edges2 = cv2.Canny(gray, 30, 100, apertureSize=3)
+        edges3 = cv2.Canny(gray, 50, 150, apertureSize=3)
+        edges = cv2.bitwise_or(cv2.bitwise_or(edges1, edges2), edges3)
         
         # Morphologie pour connecter les contours
-        kernel_dilate = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-        kernel_close = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
-        edges = cv2.dilate(edges, kernel_dilate, iterations=1)
+        kernel_dilate = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+        kernel_close = cv2.getStructuringElement(cv2.MORPH_RECT, (9, 9))
+        edges = cv2.dilate(edges, kernel_dilate, iterations=2)
         edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel_close)
         
         # Trouver les contours
@@ -398,10 +481,15 @@ class SimpleSubtitleDecoder:
             side_length = np.linalg.norm(p2 - p1)
             sides.append(side_length)
         
-        # Ratio des côtés pas trop déséquilibré
+        # Vérifier que les côtés ne sont pas trop petits
         min_side = min(sides)
         max_side = max(sides)
-        if max_side / min_side > 3.0:
+        
+        if min_side < 50:  # Écran trop petit
+            return False
+        
+        # Ratio des côtés pas trop déséquilibré (écran réaliste)
+        if max_side / min_side > 2.5:
             return False
         
         # Vérifier les angles (approximativement droits)
@@ -414,14 +502,14 @@ class SimpleSubtitleDecoder:
             v1 = p1 - p2
             v2 = p3 - p2
             
-            cos_angle = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+            cos_angle = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2) + 1e-6)
             cos_angle = np.clip(cos_angle, -1.0, 1.0)
             angle = np.arccos(cos_angle) * 180 / np.pi
             angles.append(angle)
         
-        # Angles entre 70° et 110°
+        # Angles entre 60° et 120° (plus permissif pour les perspectives)
         for angle in angles:
-            if angle < 70 or angle > 110:
+            if angle < 60 or angle > 120:
                 return False
         
         return True
@@ -440,35 +528,41 @@ class SimpleSubtitleDecoder:
         return ordered
     
     def apply_perspective_correction(self, frame: np.ndarray) -> np.ndarray:
-        """Applique la correction de perspective"""
+        """Applique la correction de perspective avec préservation du ratio d'aspect"""
         # Détecter les coins
         corners = self.detect_screen_corners(frame)
         
         if corners is not None:
-            # Ajouter au buffer pour stabiliser
+            # Ajouter au buffer pour stabiliser (augmenté de 5 à 10 pour plus de stabilité)
             self.corner_buffer.append(corners)
             
-            if len(self.corner_buffer) >= 2:
-                # Moyenne des dernières détections
-                avg_corners = np.mean(list(self.corner_buffer), axis=0)
+            if len(self.corner_buffer) >= 3:
+                # Moyenne des 3 dernières détections
+                avg_corners = np.mean(list(self.corner_buffer), axis=0).astype(np.float32)
                 
-                # Calculer les dimensions cibles
+                # Calculer les dimensions cibles EN PRÉSERVANT LE RATIO D'ASPECT
+                # Utiliser les distances réelles de l'image source
                 width1 = np.linalg.norm(avg_corners[1] - avg_corners[0])
                 width2 = np.linalg.norm(avg_corners[2] - avg_corners[3])
-                target_width = int((width1 + width2) / 2)
+                avg_width = (width1 + width2) / 2
                 
                 height1 = np.linalg.norm(avg_corners[3] - avg_corners[0])
                 height2 = np.linalg.norm(avg_corners[2] - avg_corners[1])
-                target_height = int((height1 + height2) / 2)
+                avg_height = (height1 + height2) / 2
                 
-                # Limiter les dimensions
-                max_size = 1200
-                if target_width > max_size or target_height > max_size:
-                    scale = min(max_size / target_width, max_size / target_height)
-                    target_width = int(target_width * scale)
-                    target_height = int(target_height * scale)
+                # Calculer le ratio d'aspect du frame original
+                original_h, original_w = frame.shape[:2]
+                original_ratio = original_w / original_h
                 
-                # Matrice de transformation
+                # Utiliser une taille proportionnelle à l'image originale
+                target_height = int(min(original_h * 1.2, 1080))  # Max 1080p
+                target_width = int(target_height * original_ratio)  # Préserver le ratio original
+                
+                # Vérifier que les dimensions sont valides
+                if target_width < 100 or target_height < 100:
+                    return None
+                
+                # Matrice de transformation perspective
                 dst_corners = np.array([
                     [0, 0],
                     [target_width - 1, 0],
@@ -476,10 +570,10 @@ class SimpleSubtitleDecoder:
                     [0, target_height - 1]
                 ], dtype=np.float32)
                 
-                self.perspective_matrix = cv2.getPerspectiveTransform(avg_corners.astype(np.float32), dst_corners)
-                
                 try:
-                    corrected_frame = cv2.warpPerspective(frame, self.perspective_matrix, (target_width, target_height))
+                    self.perspective_matrix = cv2.getPerspectiveTransform(avg_corners, dst_corners)
+                    corrected_frame = cv2.warpPerspective(frame, self.perspective_matrix, (target_width, target_height), 
+                                                         flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
                     self.screen_corners = avg_corners
                     
                     # Debug du redressement
@@ -487,32 +581,34 @@ class SimpleSubtitleDecoder:
                         debug_frame = frame.copy()
                         # Dessiner les coins détectés
                         for i, corner in enumerate(avg_corners.astype(int)):
-                            cv2.circle(debug_frame, tuple(corner), 8, (0, 255, 0), -1)
-                            cv2.putText(debug_frame, str(i), tuple(corner + 10),
-                                       cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                            cv2.circle(debug_frame, tuple(corner), 10, (0, 255, 0), -1)
+                            cv2.putText(debug_frame, f"C{i}", tuple(corner + 15),
+                                       cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
                         
                         # Dessiner le contour
                         cv2.polylines(debug_frame, [avg_corners.astype(int)], True, (255, 255, 0), 3)
                         
                         # Afficher dans une fenêtre séparée
-                        cv2.imshow('Perspective Debug', debug_frame)
+                        cv2.imshow('Perspective Debug - Original', debug_frame)
+                        cv2.imshow('Perspective Debug - Corrected', corrected_frame)
+                        print(f"✅ Redressement appliqué: {original_w}x{original_h} → {target_width}x{target_height} (ratio: {original_ratio:.2f})")
                     
                     return corrected_frame
                 except Exception as e:
                     if self.debug_perspective:
-                        print(f"Erreur transformation: {e}")
+                        print(f"❌ Erreur transformation perspective: {e}")
+                    return None
         
         # Utiliser la dernière matrice stable si disponible
         elif self.perspective_matrix is not None:
             try:
                 h, w = frame.shape[:2]
-                corners_3d = np.array([[[0, 0], [w, 0], [w, h], [0, h]]], dtype=np.float32)
-                transformed_corners = cv2.perspectiveTransform(corners_3d, self.perspective_matrix)
+                original_ratio = w / h
+                target_height = int(min(h * 1.2, 1080))
+                target_width = int(target_height * original_ratio)
                 
-                target_width = int(np.max(transformed_corners[0, :, 0]))
-                target_height = int(np.max(transformed_corners[0, :, 1]))
-                
-                corrected_frame = cv2.warpPerspective(frame, self.perspective_matrix, (target_width, target_height))
+                corrected_frame = cv2.warpPerspective(frame, self.perspective_matrix, (target_width, target_height),
+                                                      flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
                 return corrected_frame
             except:
                 self.perspective_matrix = None
@@ -690,14 +786,38 @@ class SimpleSubtitleDecoder:
             #print(f"❌ Impossible d'ouvrir caméra: {camera_id}")
             return
         
-        #print(f"📷 Caméra: {camera_id}")
-        #print("🎮 Contrôles actifs:")
-        #print("  'r': Activer/désactiver redressement perspective")
-        #print("  'f': Debug redressement (fenêtre séparée avec coins)")
-        #print("  'd': Debug cercles, 'c': clear, 'q': quit")
-        #print("")
-        #print("🔴 ASTUCE: Les contours rouges aux coins aident la détection !")
-        #print("   Placez l'écran bien visible avec ses 4 coins dans la caméra")
+        # ⚠️ FORCER LE FORMAT 16:9 AU LIEU DU FORMAT CAMÉRA RECTANGLE
+        # Obtenir les dimensions actuelles de la caméra
+        current_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        current_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        current_ratio = current_width / current_height
+        
+        # Calculer les nouvelles dimensions en 16:9
+        target_ratio = 16 / 9  # Ratio 16:9
+        
+        if current_ratio > target_ratio:
+            # Caméra est plus large que 16:9 → réduire la largeur
+            new_width = int(current_height * target_ratio)
+            new_height = current_height
+            x_offset = (current_width - new_width) // 2
+            y_offset = 0
+        else:
+            # Caméra est plus haute que 16:9 → réduire la hauteur
+            new_width = current_width
+            new_height = int(current_width / target_ratio)
+            x_offset = 0
+            y_offset = (current_height - new_height) // 2
+        
+        print(f"📷 Caméra: {camera_id}")
+        print(f"   Format original: {current_width}x{current_height} (ratio: {current_ratio:.2f})")
+        print(f"   Format forcé 16:9: {new_width}x{new_height} (ratio: {new_width/new_height:.2f})")
+        print("🎮 Contrôles actifs:")
+        print("  'r': Activer/désactiver redressement perspective")
+        print("  'f': Debug redressement (fenêtre séparée avec coins)")
+        print("  'd': Debug cercles, 'c': clear, 'q': quit")
+        print("")
+        print("🔴 ASTUCE: Les contours rouges aux coins aident la détection !")
+        print("   Placez l'écran bien visible avec ses 4 coins dans la caméra")
         
         cv2.namedWindow('Subtitles Decoder', cv2.WINDOW_AUTOSIZE)
         
@@ -708,12 +828,15 @@ class SimpleSubtitleDecoder:
             if not ret:
                 continue
             
+            # 🎨 REDIMENSIONNER EN 16:9 POUR ÉVITER LA DÉFORMATION RECTANGLE
+            frame_16_9 = frame[y_offset:y_offset + new_height, x_offset:x_offset + new_width]
+            
             frame_count += 1
             
             # Ne traiter qu'une frame sur 10
             if frame_count % 5 == 0:
-                # DÉTECTION
-                positions = self.detect_white_circles(frame)
+                # DÉTECTION (sur l'image redimensionnée 16:9)
+                positions = self.detect_white_circles(frame_16_9)
                 
                 if positions:
                     binary_str = self.positions_to_binary(positions)
@@ -733,7 +856,7 @@ class SimpleSubtitleDecoder:
                                     #print(f"💾 Stocké: '{new_subtitle[:50]}...'")
             
             # AFFICHAGE (toujours afficher pour fluidité visuelle)
-            display_frame = self.draw_overlay(frame)
+            display_frame = self.draw_overlay(frame_16_9)
             cv2.imshow('Subtitles Decoder', display_frame)
             
             # Contrôles
