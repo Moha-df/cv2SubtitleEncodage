@@ -9,14 +9,16 @@ import re
 import json
 from typing import List, Tuple, Dict
 import argparse
+import random
 import os
 
 class SubtitleEncoderVisibleLarge:
-    def __init__(self, grid_size: Tuple[int, int] = (16, 16), 
+    def __init__(self, grid_size: Tuple[int, int] = (8, 8), 
                  camouflage_level: int = 0, 
-                 local_radius: int = 0):
+                 local_radius: int = 0,
+                 alea: int = 0):
         """
-        Encodeur avec 4 grilles dans les coins (grilles 16x16 chacune)
+        Encodeur avec 4 grilles dans les coins (grilles 8x8 chacune par défaut)
         
         Args:
             grid_size: Taille de chaque grille (width, height)
@@ -25,13 +27,15 @@ class SubtitleEncoderVisibleLarge:
         """
         self.grid_width, self.grid_height = grid_size
         self.grid_size = grid_size
-        self.point_size = 6  # Disques adaptés pour grilles 16x16
+        self.point_size = 6  # Disques adaptés (taille raisonnable pour grilles petites)
         self.point_intensity = 255  # Blanc pur
         self.num_grids = 4  # 4 grilles dans les coins
         
         # Nouveaux paramètres de camouflage
         self.camouflage_level = max(0, min(100, camouflage_level))  # Clamp entre 0-100
         self.local_radius = max(0, local_radius)
+        # Alea = jitter amount in percent (0-100)
+        self.alea = max(0, min(100, alea))
         
         # Offsets pour rendre chaque grille différente visuellement
         self.grid_offsets = [0, 5, 10, 15]  # Grille 0: pas d'offset, 1: +5, 2: +10, 3: +15
@@ -179,6 +183,24 @@ class SubtitleEncoderVisibleLarge:
             # Position du centre du disque
             center_x = grid_x_offset + x * cell_width + cell_width // 2
             center_y = grid_y_offset + y * cell_height + cell_height // 2
+
+            # Appliquer un jitter aléatoire à l'intérieur de la cellule si demandé
+            if self.alea > 0:
+                # Distance max pour que le point reste dans sa cellule
+                max_off_x = max(0, (cell_width // 2) - self.point_size)
+                max_off_y = max(0, (cell_height // 2) - self.point_size)
+
+                # Jitter proportionnel à alea (0.0-1.0)
+                factor = self.alea / 100.0
+                jitter_x = int(max_off_x * factor)
+                jitter_y = int(max_off_y * factor)
+
+                if jitter_x > 0:
+                    dx = random.randint(-jitter_x, jitter_x)
+                    center_x = center_x + dx
+                if jitter_y > 0:
+                    dy = random.randint(-jitter_y, jitter_y)
+                    center_y = center_y + dy
             
             # Déterminer la couleur du point
             point_color = self.get_local_color(frame, center_x, center_y, frame_avg_color)
@@ -223,17 +245,40 @@ class SubtitleEncoderVisibleLarge:
         """Encode la vidéo"""
         print(f"Parsing des sous-titres avec {self.num_grids} grilles de {self.grid_width}×{self.grid_height}...")
         print(f"Camouflage: {self.camouflage_level}% (rayon local: {self.local_radius}px)")
-        
         subtitles = self.parse_srt(srt_path)
-        print(f"Trouvé {len(subtitles)} sous-titres")
-        
-        # Analyser la capacité (même contenu sur les 4 grilles)
+
+        # Capacité en caractères par grille (8 bits par caractère)
         max_chars = (self.grid_width * self.grid_height) // 8
         print(f"Capacité par grille (×{self.num_grids} pour redondance): {max_chars} caractères max")
-        
+
+        # Si un sous-titre dépasse la capacité, on le découpe en plusieurs segments
+        expanded_subtitles = []
         for subtitle in subtitles:
-            if len(subtitle['text']) > max_chars:
-                print(f"ATTENTION: Sous-titre trop long: '{subtitle['text'][:50]}...' ({len(subtitle['text'])} chars > {max_chars})")
+            text = subtitle['text']
+            n_chunks = (len(text) + max_chars - 1) // max_chars
+            if n_chunks <= 1:
+                expanded_subtitles.append(subtitle)
+            else:
+                duration = max(0.0, subtitle['end_time'] - subtitle['start_time'])
+                # découpage temporel égal entre les segments
+                chunk_duration = duration / n_chunks if duration > 0 else 0
+                print(f"Découpage du sous-titre index {subtitle['index']} en {n_chunks} segments (max {max_chars} chars/segment)")
+                for i in range(n_chunks):
+                    start = subtitle['start_time'] + i * chunk_duration
+                    # dernier segment atteint la fin exacte
+                    end = (start + chunk_duration) if i < n_chunks - 1 else subtitle['end_time']
+                    chunk_text = text[i * max_chars: (i + 1) * max_chars]
+                    expanded_subtitles.append({
+                        'index': subtitle['index'],
+                        'start_time': start,
+                        'end_time': end,
+                        'text': chunk_text,
+                        'segment_index': i + 1,
+                        'segments_total': n_chunks
+                    })
+
+        subtitles = expanded_subtitles
+        print(f"Trouvé {len(subtitles)} sous-titres (après découpage)")
         
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
@@ -288,15 +333,18 @@ class SubtitleEncoderVisibleLarge:
                     subtitle_positions.extend(positions)
                     current_subtitle_text = subtitle['text']
                     
-                    if subtitle['index'] not in [s['index'] for s in mapping_data['subtitles']]:
-                        mapping_data['subtitles'].append({
-                            'index': subtitle['index'],
-                            'start_time': subtitle['start_time'],
-                            'end_time': subtitle['end_time'],
-                            'text': subtitle['text'],
-                            'binary': binary_text,
-                            'positions': positions
-                        })
+                    # Toujours ajouter une entrée de mapping pour CHAQUE segment
+                    mapping_entry = {
+                        'index': subtitle.get('index'),
+                        'start_time': subtitle['start_time'],
+                        'end_time': subtitle['end_time'],
+                        'text': subtitle['text'],
+                        'binary': binary_text,
+                        'positions': positions,
+                        'segment_index': subtitle.get('segment_index', 1),
+                        'segments_total': subtitle.get('segments_total', 1)
+                    }
+                    mapping_data['subtitles'].append(mapping_entry)
                     break
             
             # TOUJOURS ajouter les contours rouges pour la détection de perspective
@@ -328,11 +376,12 @@ def main():
     parser.add_argument('--video', required=True, help='Vidéo source')
     parser.add_argument('--srt', required=True, help='Fichier SRT')
     parser.add_argument('--output', required=True, help='Vidéo de sortie')
-    parser.add_argument('--grid-width', type=int, default=16, help='Largeur de chaque grille (4 grilles au total)')
-    parser.add_argument('--grid-height', type=int, default=16, help='Hauteur de chaque grille (4 grilles au total)')
+    parser.add_argument('--grid-width', type=int, default=8, help='Largeur de chaque grille (4 grilles au total)')
+    parser.add_argument('--grid-height', type=int, default=8, help='Hauteur de chaque grille (4 grilles au total)')
     parser.add_argument('--point-size', type=int, default=6, help='Taille des cercles en pixels')
     parser.add_argument('--camouflage', type=int, default=0, help='Niveau de camouflage 0-100 (0=blanc, 100=couleur locale)')
     parser.add_argument('--local-radius', type=int, default=0, help='Rayon zone locale (0=moyenne frame entière)')
+    parser.add_argument('--alea', type=int, default=0, help='Bruit aléatoire 0-100: déplacement aléatoire des points à l\'intérieur de leur case')
     
     args = parser.parse_args()
     
@@ -347,7 +396,8 @@ def main():
     encoder = SubtitleEncoderVisibleLarge(
         grid_size=(args.grid_width, args.grid_height),
         camouflage_level=args.camouflage,
-        local_radius=args.local_radius
+        local_radius=args.local_radius,
+        alea=getattr(args, 'alea', 0)
     )
     
     # Configurer la taille des points si spécifiée
