@@ -1,0 +1,43 @@
+📂 Chargement des fichiers...
+🔬 Calcul des statistiques...
+=== STATISTIQUES DE DÉCODAGE DÉTAILLÉES ===
+
+📊 Sous-titres originaux: 12
+🔍 Sous-titres décodés: 215
+✅ Matches trouvés: 135
+🗑️  Bruit détecté: 80
+
+📈 Couverture des originaux:
+  % d'originaux décodés: 91.7%
+  Score moyen des meilleurs décodages: 85.1%
+  % de bruit dans les décodages: 37.2%
+
+
+📊 Analyse du bruit:
+  Total bruit: 80 décodages
+  Exemples de bruit:
+    '@...' (conf: 1.00, groupe: 1)
+    '@Yh%@...' (conf: 1.00, groupe: 1)
+    'pX9pCj`...' (conf: 1.00, groupe: 1)
+    'C2`0B...' (conf: 1.00, groupe: 1)
+    '@...' (conf: 1.00, groupe: 1)
+
+🔍 Détails par sous-titre original:
+  #1: ✅ Décodé - Meilleur: 96.2% - Moyenne: 75.8% - Matches: 11
+  #2: ❌ Non trouvé - Meilleur: 0.0% - Moyenne: 0.0% - Matches: 0
+  #3: ✅ Décodé - Meilleur: 90.0% - Moyenne: 65.5% - Matches: 12
+  #4: ✅ Décodé - Meilleur: 88.1% - Moyenne: 71.3% - Matches: 16
+  #5: ✅ Décodé - Meilleur: 87.1% - Moyenne: 61.1% - Matches: 15
+  #6: ✅ Décodé - Meilleur: 90.5% - Moyenne: 70.7% - Matches: 7
+  #7: ✅ Décodé - Meilleur: 92.3% - Moyenne: 75.6% - Matches: 10
+  #8: ✅ Décodé - Meilleur: 84.0% - Moyenne: 74.4% - Matches: 14
+  #9: ✅ Décodé - Meilleur: 82.5% - Moyenne: 73.6% - Matches: 19
+  #10: ✅ Décodé - Meilleur: 81.4% - Moyenne: 72.4% - Matches: 9
+  #11: ✅ Décodé - Meilleur: 75.9% - Moyenne: 58.7% - Matches: 15
+  #12: ✅ Décodé - Meilleur: 67.8% - Moyenne: 57.8% - Matches: 7
+
+💡 Résumé:
+  • 91.7% des sous-titres originaux ont été décodés
+  • Score moyen des meilleurs décodages: 85.1%
+  • Score moyen global (tous décodages): 68.8%
+  • 37.2% des décodages sont du bruit

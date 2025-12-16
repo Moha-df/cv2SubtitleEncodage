@@ -1,0 +1,41 @@
+📂 Chargement des fichiers...
+🔬 Calcul des statistiques...
+=== STATISTIQUES DE DÉCODAGE DÉTAILLÉES ===
+
+📊 Sous-titres originaux: 12
+🔍 Sous-titres décodés: 30
+✅ Matches trouvés: 27
+🗑️  Bruit détecté: 3
+
+📈 Couverture des originaux:
+  % d'originaux décodés: 100.0%
+  Score moyen des meilleurs décodages: 98.1%
+  % de bruit dans les décodages: 10.0%
+
+
+📊 Analyse du bruit:
+  Total bruit: 3 décodages
+  Exemples de bruit:
+    '`qc  dbs@`IsLiBEaa.....' (conf: 1.00, groupe: 1)
+    '`qc `dbc@`Ic LhBEaa....' (conf: 1.00, groupe: 1)
+    '` d``q@`Ic LiBeaa*...' (conf: 1.00, groupe: 1)
+
+🔍 Détails par sous-titre original:
+  #1: ✅ Décodé - Meilleur: 100.0% - Moyenne: 98.1% - Matches: 2
+  #2: ✅ Décodé - Meilleur: 94.3% - Moyenne: 94.3% - Matches: 1
+  #3: ✅ Décodé - Meilleur: 100.0% - Moyenne: 100.0% - Matches: 1
+  #4: ✅ Décodé - Meilleur: 100.0% - Moyenne: 97.3% - Matches: 4
+  #5: ✅ Décodé - Meilleur: 100.0% - Moyenne: 67.8% - Matches: 10
+  #6: ✅ Décodé - Meilleur: 87.8% - Moyenne: 61.7% - Matches: 2
+  #7: ✅ Décodé - Meilleur: 95.0% - Moyenne: 95.0% - Matches: 1
+  #8: ✅ Décodé - Meilleur: 100.0% - Moyenne: 100.0% - Matches: 1
+  #9: ✅ Décodé - Meilleur: 100.0% - Moyenne: 100.0% - Matches: 1
+  #10: ✅ Décodé - Meilleur: 100.0% - Moyenne: 100.0% - Matches: 1
+  #11: ✅ Décodé - Meilleur: 100.0% - Moyenne: 100.0% - Matches: 1
+  #12: ✅ Décodé - Meilleur: 100.0% - Moyenne: 67.3% - Matches: 2
+
+💡 Résumé:
+  • 100.0% des sous-titres originaux ont été décodés
+  • Score moyen des meilleurs décodages: 98.1%
+  • Score moyen global (tous décodages): 90.1%
+  • 10.0% des décodages sont du bruit

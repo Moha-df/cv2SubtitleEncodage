@@ -118,45 +118,36 @@ class SubtitleEncoderVisibleLarge:
                        frame_avg_color: np.ndarray) -> Tuple[int, int, int]:
         """
         Calcule la couleur adaptative basée sur le camouflage_level
-        
-        Args:
-            frame: Image source
-            center_x, center_y: Position du centre du cercle
-            frame_avg_color: Couleur moyenne de toute la frame (fallback)
-            
-        Returns:
-            Tuple (B, G, R) de la couleur à utiliser
+        - 0 : couleur la plus contrastée (inversion RGB du fond local)
+        - 100 : couleur locale
+        - entre les deux : blend linéaire entre couleur contrastée et couleur locale
         """
-        if self.camouflage_level == 0:
-            # Pas de camouflage : blanc pur
-            return (255, 255, 255)
-        
         height, width = frame.shape[:2]
-        
         if self.local_radius == 0:
-            # Utiliser la moyenne de toute la frame
             local_color = frame_avg_color
         else:
-            # Extraire la région locale
             y1 = max(0, center_y - self.local_radius)
             y2 = min(height, center_y + self.local_radius)
             x1 = max(0, center_x - self.local_radius)
             x2 = min(width, center_x + self.local_radius)
-            
             local_region = frame[y1:y2, x1:x2]
-            
             if local_region.size == 0:
                 local_color = frame_avg_color
             else:
                 local_color = np.mean(local_region, axis=(0, 1))
-        
-        # Interpolation linéaire entre blanc (255, 255, 255) et couleur locale
-        white = np.array([255, 255, 255], dtype=np.float32)
+        # Couleur locale (BGR)
+        local_color = np.array(local_color, dtype=np.float32)
+        # Calcul de la luminance (Y) du fond local
+        # OpenCV: BGR, donc Y = 0.114*B + 0.587*G + 0.299*R
+        luminance = 0.114 * local_color[0] + 0.587 * local_color[1] + 0.299 * local_color[2]
+        # Couleur la plus contrastée: blanc si fond sombre, noir si fond clair
+        if luminance <= 128:
+            contrast_color = np.array([255, 255, 255], dtype=np.float32)
+        else:
+            contrast_color = np.array([0, 0, 0], dtype=np.float32)
         blend_factor = self.camouflage_level / 100.0
-        
-        blended_color = white * (1 - blend_factor) + local_color * blend_factor
-        
-        return tuple(int(c) for c in blended_color)
+        blended_color = contrast_color * (1 - blend_factor) + local_color * blend_factor
+        return tuple(int(np.clip(c, 0, 255)) for c in blended_color)
     
     def add_visible_points(self, frame: np.ndarray, positions: List[Tuple[int, int, int]], 
                           frame_width: int, frame_height: int) -> np.ndarray:

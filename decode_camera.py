@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 """
-Décodeur de sous-titres SIMPLE - Juste ce qu'il faut !
-- Détecte les cercles blancs avec HoughCircles
-- Vote majoritaire entre 4 grilles
-- Affiche les sous-titres en overlay
-- PAS DE REDRESSEMENT DE MERDE !
+Décodeur de sous-titres
 """
 
 import cv2
